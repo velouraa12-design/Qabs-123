@@ -28,7 +28,13 @@ import {
   ShieldCheck,
   Database,
   RefreshCw,
-  Barcode
+  Barcode,
+  Building2,
+  Download,
+  Copy,
+  ExternalLink,
+  X,
+  FileCheck
 } from 'lucide-react';
 
 interface PortalViewProps {
@@ -52,9 +58,10 @@ type ClientTab =
   | 'domains'
   | 'apps'
   | 'analytics'
-  | 'settings';
+  | 'settings'
+  | 'company_formation';
 
-export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal }) => {
+export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal, onOpenFormationModal }) => {
   const {
     language,
     setMode,
@@ -89,7 +96,8 @@ export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal }) => {
     staff,
     addStaff,
     triggerSystemBackup,
-    user
+    user,
+    companies
   } = useApp();
 
   const isAr = language === 'ar';
@@ -155,6 +163,17 @@ export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal }) => {
   const [staffName, setStaffName] = useState('');
   const [staffEmail, setStaffEmail] = useState('');
 
+  // Local state for Company Formation Section
+  const [companyFilter, setCompanyFilter] = useState<'all' | 'approved' | 'in_progress'>('all');
+  const [viewingDoc, setViewingDoc] = useState<{ docName: string; companyName: string; type: string; date: string; jurisdiction?: string; ein?: string; fileNumber?: string } | null>(null);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard?.writeText(text);
+    setCopiedText(label);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
   const sidebarItems: { id: ClientTab; labelAr: string; labelEn: string; descAr: string; icon: React.ElementType; badge?: number | string }[] = [
     { id: 'overview', labelAr: 'الرئيسية', labelEn: 'Overview', descAr: 'ملخص المبيعات والطلبات', icon: LayoutDashboard },
     { id: 'my_stores', labelAr: 'متاجري', labelEn: 'My Stores', descAr: 'إنشاء عدة متاجر وإدارتها', icon: Store, badge: stores.length },
@@ -171,7 +190,8 @@ export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal }) => {
     { id: 'domains', labelAr: 'النطاقات', labelEn: 'Domains', descAr: 'ربط نطاق مستقل', icon: Globe },
     { id: 'apps', labelAr: 'التطبيقات', labelEn: 'Apps', descAr: 'تكاملات وإضافات', icon: Puzzle },
     { id: 'analytics', labelAr: 'التحليلات', labelEn: 'Analytics', descAr: 'المبيعات والأداء', icon: BarChart3 },
-    { id: 'settings', labelAr: 'الإعدادات', labelEn: 'Settings', descAr: 'بيانات المتجر والصلاحيات', icon: Settings }
+    { id: 'settings', labelAr: 'الإعدادات', labelEn: 'Settings', descAr: 'بيانات المتجر والصلاحيات', icon: Settings },
+    { id: 'company_formation', labelAr: 'تأسيس الشركات', labelEn: 'Company Formation', descAr: 'تأسيس الكيانات وإدارة الملفات والوثائق', icon: Building2, badge: companies.length }
   ];
 
   const handleInlineCreateStore = (e: React.FormEvent) => {
@@ -1992,6 +2012,402 @@ export const PortalView: React.FC<PortalViewProps> = ({ onOpenStoreModal }) => {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SECTION: COMPANY FORMATION (تأسيس الشركات والوثائق الرسمية) */}
+          {activeTab === 'company_formation' && (
+            <div className="space-y-6">
+              {/* Top Banner & Corporate KPIs */}
+              <div className="bg-white dark:bg-[#071D2B] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+                        {isAr ? 'الخدمات الرقمية وحوكمة الشركات' : 'Corporate Governance'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E5C158]/20 text-[#004457] dark:text-[#E5C158]">
+                        US & UK Portfolios
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-black text-[#004457] dark:text-white mt-1">
+                      {isAr ? 'إدارة الكيانات والشركات والوثائق الرسمية' : 'Corporate Entities & Legal Documents Vault'}
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {isAr
+                        ? 'متابعة ملفات تأسيس الشركات الأمريكية والبريطانية، أرقام EIN الفيدرالية، والوكيل المسجل وخزينة الوثائق'
+                        : 'Track US & UK company filings, IRS EIN letters, registered agent records & document vault'}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <button
+                      onClick={onOpenFormationModal}
+                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#004457] to-[#00A896] text-white text-xs font-black hover:opacity-95 transition-all cursor-pointer flex items-center gap-1.5 shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>{isAr ? 'تأسيس شركة جديدة' : 'Form New Company'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* KPI Metrics */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="text-xs text-slate-500 font-bold">{isAr ? 'إجمالي الكيانات' : 'Total Entities'}</div>
+                    <div className="text-2xl font-black text-[#004457] dark:text-white font-mono mt-1">
+                      {companies.length}
+                    </div>
+                    <div className="text-[11px] text-teal-600 font-bold mt-1">
+                      {isAr ? 'أمريكية وبريطانية' : 'US & UK Entities'}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="text-xs text-slate-500 font-bold">{isAr ? 'معتمدة وفعالة' : 'Active & Approved'}</div>
+                    <div className="text-2xl font-black text-emerald-600 font-mono mt-1">
+                      {companies.filter(c => c.status === 'approved').length}
+                    </div>
+                    <div className="text-[11px] text-emerald-600 font-bold mt-1">
+                      {isAr ? 'جاهزة للحسابات والمدفوعات' : 'Ready for Banking'}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="text-xs text-slate-500 font-bold">{isAr ? 'أرقام EIN الصادرة' : 'Issued EINs'}</div>
+                    <div className="text-2xl font-black text-[#004457] dark:text-white font-mono mt-1">
+                      {companies.filter(c => c.ein).length}
+                    </div>
+                    <div className="text-[11px] text-teal-600 font-bold mt-1">
+                      {isAr ? 'خطاب CP575 معتمد' : 'CP575 Certified'}
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="text-xs text-slate-500 font-bold">{isAr ? 'الامتثال السنوي' : 'Compliance Calendar'}</div>
+                    <div className="text-sm font-black text-emerald-600 mt-2 flex items-center gap-1">
+                      <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                      <span>{isAr ? 'ساري ومنتظم' : 'Good Standing'}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-1">
+                      {isAr ? 'الوكيل المسجل نشط' : 'Agent Active'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => setCompanyFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      companyFilter === 'all'
+                        ? 'bg-[#004457] text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {isAr ? 'جميع الشركات' : 'All Companies'} ({companies.length})
+                  </button>
+                  <button
+                    onClick={() => setCompanyFilter('approved')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      companyFilter === 'approved'
+                        ? 'bg-[#004457] text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {isAr ? 'المعتمدة رسمياً' : 'Approved'} ({companies.filter(c => c.status === 'approved').length})
+                  </button>
+                  <button
+                    onClick={() => setCompanyFilter('in_progress')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      companyFilter === 'in_progress'
+                        ? 'bg-[#004457] text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {isAr ? 'قيد الإيداع والمراجعة' : 'In Progress'} ({companies.filter(c => c.status !== 'approved').length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Companies List Cards */}
+              <div className="space-y-5">
+                {companies
+                  .filter(comp => {
+                    if (companyFilter === 'approved') return comp.status === 'approved';
+                    if (companyFilter === 'in_progress') return comp.status !== 'approved';
+                    return true;
+                  })
+                  .map(comp => (
+                    <div
+                      key={comp.id}
+                      className="bg-white dark:bg-[#071D2B] border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5"
+                    >
+                      {/* Company Header */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#004457] to-[#00A896] text-[#E5C158] font-black text-lg flex items-center justify-center font-mono shadow-sm">
+                            <Building2 className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-base sm:text-lg font-black text-[#004457] dark:text-white">
+                                {comp.companyName}
+                              </h3>
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-teal-100 text-teal-900 dark:bg-teal-950 dark:text-teal-200">
+                                {comp.entityType}
+                              </span>
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                {comp.jurisdiction.replace('US_', '').replace('_', ' ')}
+                              </span>
+                            </div>
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              {isAr ? 'تاريخ التأسيس والإيداع:' : 'Filing Date:'} <span className="font-mono">{comp.filingDate}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-black self-start sm:self-center ${
+                            comp.status === 'approved'
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                              : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'
+                          }`}
+                        >
+                          {comp.status === 'approved'
+                            ? isAr
+                              ? 'معتمدة ومسجلة رسمياً ✓'
+                              : 'Approved & Active ✓'
+                            : isAr
+                            ? 'قيد الإيداع والمراجعة الحكومية'
+                            : 'Submitted to State'}
+                        </span>
+                      </div>
+
+                      {/* Official Registration Data Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">
+                            {isAr ? 'رقم قيد الولاية / CRN' : 'State File / CRN'}
+                          </span>
+                          <span className="font-mono font-bold text-[#004457] dark:text-teal-300 mt-0.5 block">
+                            {comp.stateFileNumber || comp.crn || 'قيد الإصدار'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-400 text-[11px]">
+                              {isAr ? 'الرقم الضريبي الفيدرالي EIN' : 'IRS Federal EIN'}
+                            </span>
+                            {comp.ein && (
+                              <button
+                                onClick={() => copyToClipboard(comp.ein!, comp.id + '_ein')}
+                                className="text-[10px] text-[#00A896] hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                <Copy className="w-3 h-3" />
+                                <span>{copiedText === comp.id + '_ein' ? (isAr ? 'تم النسخ!' : 'Copied!') : (isAr ? 'نسخ' : 'Copy')}</span>
+                              </button>
+                            )}
+                          </div>
+                          <span className="font-mono font-bold text-[#004457] dark:text-teal-300 mt-0.5 block">
+                            {comp.ein || (isAr ? 'بانتظار خطاب IRS' : 'Pending CP575')}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">
+                            {isAr ? 'الوكيل المسجل والعنوان' : 'Registered Agent'}
+                          </span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300 mt-0.5 block truncate" title={comp.registeredAddress}>
+                            {comp.registeredAddress}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-slate-400 block text-[11px]">
+                            {isAr ? 'موعد التجديد السنوي' : 'Annual Renewal Due'}
+                          </span>
+                          <span className="font-mono font-bold text-amber-600 mt-0.5 block">
+                            {comp.renewalDueDate}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Official Documents Vault */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-black text-[#004457] dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                            <FileCheck className="w-4 h-4 text-[#00A896]" />
+                            <span>{isAr ? 'خزينة الوثائق القانونية والشهادات الرسمية' : 'Official Legal Documents Vault'}</span>
+                          </h4>
+                          <span className="text-[11px] text-slate-400">
+                            {comp.documents.length} {isAr ? 'وثائق معتمدة' : 'Documents'}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {comp.documents.map((doc, dIdx) => (
+                            <div
+                              key={dIdx}
+                              className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#061824] flex items-center justify-between gap-3 shadow-2xs hover:border-[#00A896] transition-colors"
+                            >
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-[#004457] dark:text-white truncate">
+                                  {doc.name}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                                  {doc.date} • {doc.status === 'ready' ? (isAr ? 'معتمد رسمي' : 'Certified') : (isAr ? 'قيد التوليد' : 'Generating')}
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() =>
+                                  setViewingDoc({
+                                    docName: doc.name,
+                                    companyName: comp.companyName,
+                                    type: doc.type,
+                                    date: doc.date,
+                                    jurisdiction: comp.jurisdiction,
+                                    ein: comp.ein,
+                                    fileNumber: comp.stateFileNumber || comp.crn
+                                  })
+                                }
+                                className="px-2.5 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950 text-[#004457] dark:text-teal-300 hover:bg-teal-100 text-[11px] font-bold shrink-0 cursor-pointer flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>{isAr ? 'معاينة' : 'View'}</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Linked Banking & Store Quick Actions */}
+                      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-slate-500 font-bold">{isAr ? 'الربط المالي والتجاري:' : 'Linked Services:'}</span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Mercury / Wise Active</span>
+                          </span>
+                          <span className="px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Stripe Ready</span>
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setActiveTab('my_stores')}
+                            className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs cursor-pointer hover:bg-slate-200"
+                          >
+                            {isAr ? 'ربط بمتجر إلكتروني' : 'Link to Store'}
+                          </button>
+                          <button
+                            onClick={onOpenFormationModal}
+                            className="px-3 py-1.5 rounded-lg bg-[#004457] text-white font-bold text-xs cursor-pointer hover:bg-[#003342]"
+                          >
+                            {isAr ? '+ تأسيس كيان إضافي' : '+ Add Another Entity'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                {companies.length === 0 && (
+                  <div className="p-12 text-center bg-white dark:bg-[#071D2B] rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
+                    <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
+                    <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
+                      {isAr ? 'لم تقم بتأسيس أي شركة بعد' : 'No corporate entities registered yet'}
+                    </p>
+                    <button
+                      onClick={onOpenFormationModal}
+                      className="px-5 py-2.5 rounded-xl bg-[#004457] text-white text-xs font-black cursor-pointer"
+                    >
+                      {isAr ? 'ابدأ تأسيس شركتك الأولى الآن' : 'Start Your First Formation'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* DOCUMENT PREVIEW MODAL */}
+          {viewingDoc && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+              <div className="bg-white dark:bg-[#071D2B] border-2 border-[#00A896] rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+                <button
+                  onClick={() => setViewingDoc(null)}
+                  className="absolute top-5 left-5 rtl:left-auto rtl:right-5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Certificate Header */}
+                <div className="text-center space-y-2 border-b-2 border-[#00A896]/30 pb-5">
+                  <div className="inline-block p-3 rounded-2xl bg-[#004457] text-[#E5C158] font-mono shadow-md mb-1">
+                    <ShieldCheck className="w-8 h-8" />
+                  </div>
+                  <div className="text-xs uppercase font-extrabold tracking-widest text-[#00A896]">
+                    Official Certified Corporate Document
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-[#003445] dark:text-white">
+                    {viewingDoc.docName}
+                  </h3>
+                  <div className="text-xs text-slate-500 font-mono">
+                    Jurisdiction: {viewingDoc.jurisdiction || 'US / UK Registry'}
+                  </div>
+                </div>
+
+                {/* Simulated Certificate Body */}
+                <div className="p-6 rounded-2xl bg-amber-50/50 dark:bg-slate-900/80 border border-amber-200/60 dark:border-slate-800 space-y-4 text-xs font-mono leading-relaxed">
+                  <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
+                    <span className="font-bold text-slate-500">ENTITY LEGAL NAME:</span>
+                    <span className="font-black text-[#004457] dark:text-[#E5C158]">{viewingDoc.companyName}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
+                    <span className="font-bold text-slate-500">REGISTRATION FILE NUMBER:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{viewingDoc.fileNumber || 'WY-2025-00194829'}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
+                    <span className="font-bold text-slate-500">IRS FEDERAL EIN:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{viewingDoc.ein || '98-4720194'}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
+                    <span className="font-bold text-slate-500">DATE OF CERTIFICATION:</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{viewingDoc.date}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-500">STATUS:</span>
+                    <span className="font-bold text-emerald-600 uppercase">GOOD STANDING / FILED & VERIFIED</span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Seal & Signature Verified by QABS Registrar
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        window.print();
+                      }}
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[#004457] dark:text-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>{isAr ? 'طباعة / تصدير PDF' : 'Print / Export PDF'}</span>
+                    </button>
+                    <button
+                      onClick={() => setViewingDoc(null)}
+                      className="px-5 py-2 rounded-xl bg-[#004457] text-white text-xs font-black cursor-pointer hover:bg-[#003342]"
+                    >
+                      {isAr ? 'إغلاق' : 'Close'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

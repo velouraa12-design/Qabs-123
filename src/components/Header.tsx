@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
                 : 'border-transparent text-slate-600 dark:text-slate-300 hover:text-[#004457] dark:hover:text-white'
             }`}
           >
-            {isAr ? 'الواجهة الرئيسية والخدمات' : 'Showcase & Services'}
+            {isAr ? 'الموقع التعريفي' : 'Showcase Website'}
           </button>
 
           <button
@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
             }`}
           >
             <Store className="w-3.5 h-3.5 text-[#00A896]" />
-            <span>{isAr ? 'بوابة العميل ومتاجري' : 'Merchant Portal'}</span>
+            <span>{isAr ? 'البوابة الموحدة (المتاجر والشركات)' : 'Unified Portal (Stores & Formation)'}</span>
           </button>
 
           <button

@@ -913,9 +913,47 @@ export const INITIAL_COMPANIES: CompanyFormation[] = [
     status: 'approved',
     documents: [
       { name: 'Articles of Organization', type: 'articles', status: 'ready', date: '2025-01-14' },
-      { name: 'Official IRS EIN Letter (CP575)', type: 'ein_letter', status: 'ready', date: '2025-01-20' }
+      { name: 'Official IRS EIN Letter (CP575)', type: 'ein_letter', status: 'ready', date: '2025-01-20' },
+      { name: 'Operating Agreement (LLC Agreement)', type: 'operating_agreement', status: 'ready', date: '2025-01-15' },
+      { name: 'Banking Resolution & Authority Certificate', type: 'resolution', status: 'ready', date: '2025-01-22' }
     ],
-    notes: 'Wyoming Annual Report filing completed for 2026.'
+    notes: 'Wyoming Annual Report filing completed for 2026. Mercury & Stripe connected.'
+  },
+  {
+    id: 'comp_02',
+    companyName: 'ANDALUS COMMERCE GROUP LTD',
+    jurisdiction: 'UK_LTD',
+    entityType: 'LTD',
+    crn: '14920412',
+    registeredAgent: 'QABS UK Company Secretarial & Registered Office',
+    registeredAddress: '71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, UK',
+    filingDate: '2025-06-18',
+    renewalDueDate: '2026-06-18',
+    status: 'approved',
+    documents: [
+      { name: 'Certificate of Incorporation', type: 'certificate_of_inc', status: 'ready', date: '2025-06-18' },
+      { name: 'Articles of Association', type: 'articles', status: 'ready', date: '2025-06-18' },
+      { name: 'HMRC Corporation Tax UTR Confirmation', type: 'ein_letter', status: 'ready', date: '2025-06-25' }
+    ],
+    notes: 'UK Companies House active. Wise Business account linked.'
+  },
+  {
+    id: 'comp_03',
+    companyName: 'TECHVOLT VENTURES INC',
+    jurisdiction: 'US_DELAWARE',
+    entityType: 'C-CORP',
+    stateFileNumber: 'DE-2026-7839102',
+    registeredAgent: 'The Corporation Trust Company (Wilmington, DE)',
+    registeredAddress: '1209 N Orange St, Wilmington, DE 19801, USA',
+    filingDate: '2026-02-10',
+    renewalDueDate: '2027-03-01',
+    status: 'submitted_to_state',
+    documents: [
+      { name: 'Certificate of Incorporation (Filed)', type: 'certificate_of_inc', status: 'ready', date: '2026-02-10' },
+      { name: 'Federal EIN (IRS Review Pending)', type: 'ein_letter', status: 'generating', date: '2026-02-12' },
+      { name: 'Bylaws & Initial Shareholder Agreement', type: 'operating_agreement', status: 'ready', date: '2026-02-11' }
+    ],
+    notes: 'Delaware Division of Corporations submission approved. Awaiting IRS CP575 letter.'
   }
 ];
 

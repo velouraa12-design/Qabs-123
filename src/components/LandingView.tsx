@@ -21,9 +21,10 @@ import {
   FileCheck2,
   Edit3,
   Phone,
-  ExternalLink,
-  Eye,
-  Lock
+  HelpCircle,
+  Zap,
+  Award,
+  ArrowRight
 } from 'lucide-react';
 
 interface LandingViewProps {
@@ -37,15 +38,18 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onOpenStoreModal,
   onOpenAIModal
 }) => {
-  const { language, setMode, stores, activeStoreId, setActiveStoreId } = useApp();
+  const { language, setMode } = useApp();
   const { siteContent, setEditorOpen } = useCustomizer();
   const isAr = language === 'ar';
 
-  // Hidden by default per user instruction ("أسعار كافة الولايات الأمريكية بشفافية تامة — خليه مخفي")
+  // Collapsible states pricing
   const [showStatesPricing, setShowStatesPricing] = useState(false);
   const [stateSearch, setStateSearch] = useState('');
   const [stateFilter, setStateFilter] = useState<'all' | 'popular' | 'zero_tax' | 'low_fee'>('all');
   const [selectedPkgId, setSelectedPkgId] = useState<'starter' | 'complete' | 'premium'>('complete');
+
+  // FAQ Accordion state
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const selectedPkg =
     QABS_FORMATION_PKGS.find(p => p.id === selectedPkgId) || QABS_FORMATION_PKGS[1];
@@ -62,9 +66,42 @@ export const LandingView: React.FC<LandingViewProps> = ({
     return true;
   });
 
+  const faqs = [
+    {
+      qAr: 'هل يمكن لغير المقيم في أمريكا تأسيس شركة قانونية 100%؟',
+      qEn: 'Can non-US residents legally form a US company 100%?',
+      aAr: 'نعم، يتيح القانون الأمريكي لرواد الأعمال والمستثمرين من كافة دول العالم تأسيس شركات LLC أو C-Corp وامتلاكها بنسبة 100% دون اشتراط إقامة أو زيارة للولايات المتحدة أو وجود شريك أمريكي.',
+      aEn: 'Yes, US law allows global founders to form and own 100% of an LLC or C-Corp without requiring US residency, travel, or a domestic partner.'
+    },
+    {
+      qAr: 'ما هو الفرق بين التأسيس في وايومنغ (Wyoming) وديلاوير (Delaware)؟',
+      qEn: 'What is the difference between Wyoming and Delaware formation?',
+      aAr: 'ولاية وايومنغ هي الخيار الأول للتجارة الإلكترونية والأنشطة الرقمية بفضل خصوصية الملاك العالية وانعدام ضريبة الدخل والرسوم السنوية المنخفضة ($60). بينما ولاية ديلاوير هي المعيار الذهبي للشركات التقنية الناشئة التي تخطط لجذب استثمارات ورؤوس أموال مغامرة (VC).',
+      aEn: 'Wyoming is ideal for e-commerce and digital founders due to complete privacy, zero state income tax, and low annual fees ($60). Delaware is the premier standard for tech startups seeking venture capital and institutional funding.'
+    },
+    {
+      qAr: 'كم يستغرق إصدار الرقم الضريبي الفيدرالي EIN للشركات لغير المقيمين؟',
+      qEn: 'How long does IRS EIN issuance take for non-residents?',
+      aAr: 'يستغرق إصدار شهادة الرقم الضريبي الرسمي CP575 من مصلحة الضرائب الأمريكية (IRS) لغير حاملي رقم SSN عادة بين 4 إلى 10 أيام عمل عبر خط الاتصال المباشر المخصص للوكلاء المعتمدين.',
+      aEn: 'Official IRS CP575 EIN issuance for non-SSN holders typically takes 4 to 10 business days via direct authorized agent channels.'
+    },
+    {
+      qAr: 'كيف يساعدني الكيان في ربط بوابات الدفع Stripe والحساب البنكي؟',
+      qEn: 'How does the entity facilitate Stripe and US banking approval?',
+      aAr: 'بمجرد صدور وثائق التأسيس والرقم الضريبي EIN وعنوان الوكيل المسجل، يصبح لديك ملف تجاري أمريكي متكامل يؤهلك لفتح حسابات بنكية أعمال (مثل Mercury و Wise Business) والتقديم على بوابات الدفع العالمية مثل Stripe و PayPal.',
+      aEn: 'With state formation papers, IRS EIN, and registered address, you possess a compliant US business profile to open business fintech accounts (Mercury, Wise) and apply for Stripe and PayPal.'
+    },
+    {
+      qAr: 'هل يمكنني إدارة متاجري الإلكترونية وتأسيس الشركات من نفس لوحة التحكم؟',
+      qEn: 'Can I manage my online stores and corporate entities from one unified portal?',
+      aAr: 'نعم تماماً! تقدم منصة قبس الموحدة لوحة تحكم واحدة تجمع إدارة ملفات تأسيس الشركات ووثائقها القانونية، إلى جانب إدارة متاجرك الإلكترونية المستقلة ومنتجاتها وطلباتها واستوديو التصميم.',
+      aEn: 'Yes! QABS provides a unified dashboard merging corporate entity filings and legal compliance with independent online stores, product catalogs, and QABS Studio design.'
+    }
+  ];
+
   return (
     <div className="space-y-16 pb-20">
-      {/* 1. EXECUTIVE HERO SECTION (CUSTOMIZABLE VIA CUSTOMIZER CONTEXT) */}
+      {/* 1. EXECUTIVE HERO SECTION */}
       <section className="relative overflow-hidden bg-gradient-to-b from-white via-[#F2F9F9] to-white dark:from-[#03131D] dark:via-[#062030] dark:to-[#03131D] pt-10 pb-16 border-b-2 border-[#00A896]/25">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
@@ -95,10 +132,10 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
                 <button
                   onClick={() => setMode('portal')}
-                  className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#004457] text-[#004457] dark:text-teal-300 font-black text-xs sm:text-sm hover:bg-teal-50/60 transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#004457] text-[#004457] dark:text-teal-300 font-black text-xs sm:text-sm hover:bg-teal-50/60 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
                 >
                   <Store className="w-4 h-4 text-[#00A896]" />
-                  <span>{isAr ? 'دخول بوابة العميل ومتاجر قبس' : 'Open Client Portal & Stores'}</span>
+                  <span>{isAr ? 'الدخول للبوابة الموحدة (المتاجر والشركات)' : 'Open Unified Portal'}</span>
                 </button>
 
                 {onOpenAIModal && (
@@ -121,7 +158,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 </button>
               </div>
 
-              {/* Official Quick Links Pill Strip */}
+              {/* Official Quick Links Strip */}
               <div className="pt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                 <a
                   href="https://qabs1.store"
@@ -133,23 +170,12 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   <span>qabs1.store</span>
                 </a>
                 <span>•</span>
-                <a
-                  href="https://portal.qabs1.store"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-[#00A896] font-mono font-bold"
+                <button
+                  onClick={() => setMode('portal')}
+                  className="hover:text-[#00A896] font-mono font-bold cursor-pointer"
                 >
                   portal.qabs1.store
-                </a>
-                <span>•</span>
-                <a
-                  href="https://staging.qabs1.store"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-[#00A896] font-mono font-bold"
-                >
-                  staging.qabs1.store
-                </a>
+                </button>
                 <span>•</span>
                 <a
                   href={`https://wa.me/${siteContent.whatsappNumber.replace(/[^0-9]/g, '')}`}
@@ -173,7 +199,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     className="h-12 w-auto object-contain bg-white rounded-xl px-2 py-1 border border-slate-100"
                   />
                   <div className="text-left">
-                    <span className="text-[11px] text-slate-400 block">
+                    <span className="text-[11px] text-slate-400 block font-bold">
                       {isAr ? 'باقة التأسيس والدفع الشاملة' : 'Turnkey Launch Package'}
                     </span>
                     <span className="text-2xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
@@ -210,12 +236,48 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     {isAr ? 'ابدأ تأسيس شركتك' : 'Form Company Now'}
                   </button>
                   <button
-                    onClick={onOpenStoreModal}
+                    onClick={() => setMode('portal')}
                     className="py-3 px-4 rounded-xl bg-[#00A896] hover:bg-[#008f7f] text-white font-black text-xs transition-all cursor-pointer text-center"
                   >
-                    {isAr ? 'أنشئ متجرك المستقل' : 'Create Online Store'}
+                    {isAr ? 'البوابة الموحدة' : 'Unified Portal'}
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Quantitative Trust Metrics */}
+          <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
+                +1,450
+              </div>
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                {isAr ? 'شركة تم تأسيسها رسمياً' : 'Companies Incorporated'}
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
+                100%
+              </div>
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                {isAr ? 'نسبة نجاح استخراج EIN' : 'EIN Issuance Success'}
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
+                48h
+              </div>
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                {isAr ? 'متوسط سرعة الإيداع لدى الولاية' : 'Avg State Filing Speed'}
+              </div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
+                $0
+              </div>
+              <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                {isAr ? 'ضريبة دخل في وايومنغ' : 'State Tax in Wyoming'}
               </div>
             </div>
           </div>
@@ -256,8 +318,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Register LLC or C-Corp in all 50 US states or UK LTD with full corporate documents.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896]">
-              {isAr ? 'فتح بوابة التأسيس ←' : 'Open Formation Wizard →'}
+            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+              <span>{isAr ? 'فتح بوابة التأسيس' : 'Open Formation Wizard'}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
           </div>
 
@@ -279,8 +342,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Official IRS CP575 EIN issuance, registered agent address, and annual state filings.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896]">
-              {isAr ? 'إدارة الوثائق والامتثال ←' : 'Manage Compliance →'}
+            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+              <span>{isAr ? 'إدارة الوثائق والامتثال' : 'Manage Compliance'}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
           </div>
 
@@ -298,12 +362,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </h3>
               <p className="text-xs text-slate-500 leading-relaxed">
                 {isAr
-                  ? 'متجر إلكتروني مستقل لكل عميل بلوحة تحكم من 16 قسماً واستوديو تصميم مرئي وعزل كامل للبيانات.'
+                  ? 'متجر إلكتروني مستقل لكل عميل مع لوحة تحكم متكاملة واستوديو تصميم مرئي وعزل كامل للبيانات.'
                   : 'Independent online store per client with 16-section dashboard, visual QABS Studio, and full isolation.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896]">
-              {isAr ? 'إدارة المتاجر الإلكترونية ←' : 'Open QABS Stores →'}
+            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+              <span>{isAr ? 'إدارة المتاجر الإلكترونية' : 'Open QABS Stores'}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
           </div>
 
@@ -325,14 +390,175 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Connect Mercury, Wise, Stripe, PayPal, Tap & Moyasar with verified governance.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896]">
-              {isAr ? 'عرض الباقات والمدفوعات ←' : 'View Plans & Banking →'}
+            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+              <span>{isAr ? 'عرض الباقات والمدفوعات' : 'View Plans & Banking'}</span>
+              <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
           </div>
         </div>
       </section>
 
-      {/* 3. COLLAPSIBLE (HIDDEN BY DEFAULT) ALL 50 US STATES TRANSPARENT PRICING */}
+      {/* 3. THE 3-STEP FORMATION JOURNEY */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white dark:bg-[#071D2B] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm space-y-8">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+              {isAr ? 'كيف تبدأ شركتك وتجارتك مع قبس؟' : 'How It Works'}
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#003445] dark:text-white">
+              {isAr ? 'ثلاث خطوات فقط للانطلاق نحو العالمية' : '3 Simple Steps to Global Commerce'}
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500">
+              {isAr
+                ? 'نتولى عنك كافة الإجراءات الحكومية والقانونية والتقنية لتتفرغ لتنمية تجارتك'
+                : 'We manage all legal, governmental, and technical procedures so you can focus on scale'}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
+              <div className="w-10 h-10 rounded-xl bg-[#004457] text-[#E5C158] font-black text-sm flex items-center justify-center font-mono">
+                01
+              </div>
+              <h3 className="text-base font-black text-[#003445] dark:text-white">
+                {isAr ? 'اختيار الولاية وتعبئة البيانات' : 'Select State & Enter Details'}
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {isAr
+                  ? 'اختر الولاية الأنسب لنشاطك (وايومنغ للتجارة الإلكترونية، ديلاوير للاستثمار) وقم بتحديد اسم الشركة والمدراء.'
+                  : 'Choose the best state (Wyoming for commerce, Delaware for VC) and specify company name & managers.'}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
+              <div className="w-10 h-10 rounded-xl bg-[#00A896] text-white font-black text-sm flex items-center justify-center font-mono">
+                02
+              </div>
+              <h3 className="text-base font-black text-[#003445] dark:text-white">
+                {isAr ? 'الإيداع واستخراج EIN والوثائق' : 'State Filing & IRS EIN'}
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {isAr
+                  ? 'نقوم بإيداع النظام الأساسي لدى سكرتير الولاية واستخراج الرقم الضريبي الفيدرالي EIN وتجهيز عقد التأسيس.'
+                  : 'We file Articles of Organization, obtain IRS EIN letter, and issue the custom Operating Agreement.'}
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
+              <div className="w-10 h-10 rounded-xl bg-[#C8A24A] text-slate-950 font-black text-sm flex items-center justify-center font-mono">
+                03
+              </div>
+              <h3 className="text-base font-black text-[#003445] dark:text-white">
+                {isAr ? 'تفعيل البنك والدفع وإطلاق المتجر' : 'Banking, Gateways & Launch'}
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                {isAr
+                  ? 'نوجهك لفتح حساب Mercury أو Wise، وربط بوابة Stripe، وتفعيل متجرك الإلكتروني المستقل في قبس.'
+                  : 'Open Mercury or Wise accounts, connect Stripe payment gateway, and launch your store on QABS.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. JURISDICTION COMPARISON TABLE */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div>
+          <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+            {isAr ? 'دليل الاختيار الذكي' : 'Jurisdiction Comparison'}
+          </span>
+          <h2 className="text-2xl font-black text-[#003445] dark:text-white mt-1">
+            {isAr ? 'مقارنة الولايات التأسيسية الأكثر طلباً لرواد الأعمال' : 'Top Jurisdictions Comparison'}
+          </h2>
+        </div>
+
+        <div className="overflow-x-auto rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-[#071D2B]">
+          <table className="w-full text-right text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-black border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th className="p-4">{isAr ? 'الولاية / الاختصاص' : 'Jurisdiction'}</th>
+                <th className="p-4">{isAr ? 'ضريبة دخل الولاية' : 'State Income Tax'}</th>
+                <th className="p-4">{isAr ? 'سرية الملاك (Privacy)' : 'Owner Privacy'}</th>
+                <th className="p-4">{isAr ? 'التقرير السنوي' : 'Annual Report'}</th>
+                <th className="p-4">{isAr ? 'الأنسب لـ' : 'Recommended For'}</th>
+                <th className="p-4 text-center">{isAr ? 'الإجراء' : 'Action'}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+              <tr className="hover:bg-teal-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                <td className="p-4 font-black text-[#004457] dark:text-white">
+                  {isAr ? 'وايومنغ (Wyoming - WY) ⭐' : 'Wyoming (WY)'}
+                </td>
+                <td className="p-4 text-emerald-600 font-bold">0% (معفاة تماماً)</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سرية تامة (لا تظهر بالسجلات العامة)</td>
+                <td className="p-4 font-mono">$60 / سنوياً</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400">التجارة الإلكترونية، المتاجر الرقمية، والخدمات عن بعد</td>
+                <td className="p-4 text-center">
+                  <button
+                    onClick={() => onOpenFormationModal('WY')}
+                    className="px-3 py-1.5 rounded-lg bg-[#004457] hover:bg-[#003342] text-white font-bold text-[11px] cursor-pointer"
+                  >
+                    {isAr ? 'تأسيس في وايومنغ' : 'Form in WY'}
+                  </button>
+                </td>
+              </tr>
+              <tr className="hover:bg-teal-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                <td className="p-4 font-black text-[#004457] dark:text-white">
+                  {isAr ? 'ديلاوير (Delaware - DE)' : 'Delaware (DE)'}
+                </td>
+                <td className="p-4 text-slate-700 dark:text-slate-300 font-bold">0% (خارج الولاية)</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">حماية قانونية متقدمة (Court of Chancery)</td>
+                <td className="p-4 font-mono">$300 / سنوياً</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400">الشركات الناشئة التقنية، جذب الاستثمار وصناديق VC</td>
+                <td className="p-4 text-center">
+                  <button
+                    onClick={() => onOpenFormationModal('DE')}
+                    className="px-3 py-1.5 rounded-lg bg-[#004457] hover:bg-[#003342] text-white font-bold text-[11px] cursor-pointer"
+                  >
+                    {isAr ? 'تأسيس في ديلاوير' : 'Form in DE'}
+                  </button>
+                </td>
+              </tr>
+              <tr className="hover:bg-teal-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                <td className="p-4 font-black text-[#004457] dark:text-white">
+                  {isAr ? 'نيو مكسيكو (New Mexico - NM)' : 'New Mexico (NM)'}
+                </td>
+                <td className="p-4 text-emerald-600 font-bold">0% (للأعمال الخارجية)</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سرية تامة ومطلقة للملاك</td>
+                <td className="p-4 font-mono text-emerald-600 font-bold">$0 (لا يوجد تقرير سنوي)</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400">أقل تكلفة صيانة سنوية وميزانية اقتصادية</td>
+                <td className="p-4 text-center">
+                  <button
+                    onClick={() => onOpenFormationModal('NM')}
+                    className="px-3 py-1.5 rounded-lg bg-[#004457] hover:bg-[#003342] text-white font-bold text-[11px] cursor-pointer"
+                  >
+                    {isAr ? 'تأسيس في نيو مكسيكو' : 'Form in NM'}
+                  </button>
+                </td>
+              </tr>
+              <tr className="hover:bg-teal-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                <td className="p-4 font-black text-[#004457] dark:text-white">
+                  {isAr ? 'بريطانيا (UK LTD)' : 'United Kingdom (LTD)'}
+                </td>
+                <td className="p-4 text-slate-700 dark:text-slate-300 font-bold">ضريبة الشركات البريطانية</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سجل Companies House الرسمي</td>
+                <td className="p-4 font-mono">£13 تقرير تأكيد سنوي</td>
+                <td className="p-4 text-slate-600 dark:text-slate-400">التجارة مع بريطانيا وأوروبا وبوابات الدفع بالجنيه الإسترليني</td>
+                <td className="p-4 text-center">
+                  <button
+                    onClick={() => onOpenFormationModal('UK')}
+                    className="px-3 py-1.5 rounded-lg bg-[#004457] hover:bg-[#003342] text-white font-bold text-[11px] cursor-pointer"
+                  >
+                    {isAr ? 'تأسيس في بريطانيا' : 'Form UK LTD'}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 5. COLLAPSIBLE ALL 50 US STATES TRANSPARENT PRICING */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl bg-white dark:bg-[#071D2B] border-2 border-[#004457]/20 dark:border-cyan-950 p-6 shadow-md space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -459,8 +685,94 @@ export const LandingView: React.FC<LandingViewProps> = ({
         </div>
       </section>
 
-      {/* End of Main Content */}
+      {/* 6. FAQ ACCORDION SECTION */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="text-center space-y-2">
+          <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+            {isAr ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
+          </span>
+          <h2 className="text-2xl font-black text-[#003445] dark:text-white">
+            {isAr ? 'كل ما تحتاج معرفته عن تأسيس الشركات وبوابات الدفع' : 'Everything You Need to Know'}
+          </h2>
+        </div>
+
+        <div className="space-y-3">
+          {faqs.map((faq, idx) => {
+            const isOpen = openFaqIndex === idx;
+            return (
+              <div
+                key={idx}
+                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#071D2B] overflow-hidden transition-all shadow-sm"
+              >
+                <button
+                  onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                  className="w-full p-5 text-right flex items-center justify-between gap-4 cursor-pointer font-bold text-sm text-[#003445] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <HelpCircle className="w-4 h-4 text-[#00A896] shrink-0" />
+                    <span>{isAr ? faq.qAr : faq.qEn}</span>
+                  </div>
+                  {isOpen ? (
+                    <ChevronUp className="w-4 h-4 text-[#00A896] shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                  )}
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+                    {isAr ? faq.aAr : faq.aEn}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 7. FINAL EXECUTIVE CTA BANNER */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="rounded-3xl bg-gradient-to-r from-[#003445] via-[#004D5E] to-[#003445] text-white p-8 sm:p-12 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-8 border-2 border-[#00A896]/30">
+          <div className="space-y-3 max-w-2xl">
+            <span className="px-3 py-1 rounded-full bg-[#E5C158] text-slate-950 font-black text-xs uppercase tracking-wider inline-block">
+              {isAr ? 'انطلاقة موثوقة وسريعة' : 'Fast & Compliant Launch'}
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black leading-tight">
+              {isAr
+                ? 'جاهز لنقل تجارتك وأعمالك إلى المستوى العالمي مع قبس؟'
+                : 'Ready to Expand Your Business Globally with QABS?'}
+            </h2>
+            <p className="text-xs sm:text-sm text-teal-100 leading-relaxed">
+              {isAr
+                ? 'ابدأ اليوم بتأسيس شركتك الأمريكية أو البريطانية، واحصل على الرقم الضريبي EIN، وأدر متاجرك الإلكترونية من لوحة واحدة موحدة.'
+                : 'Form your US or UK company today, obtain IRS EIN, and run all your e-commerce stores from one unified portal.'}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
+            <button
+              onClick={() => onOpenFormationModal('WY')}
+              className="px-6 py-3.5 rounded-xl bg-[#E5C158] hover:bg-[#d8b44c] text-slate-950 font-black text-xs sm:text-sm transition-all cursor-pointer shadow-lg text-center"
+            >
+              {isAr ? 'ابدأ تأسيس شركتك الآن' : 'Start Formation Now'}
+            </button>
+            <button
+              onClick={() => setMode('portal')}
+              className="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs sm:text-sm transition-all cursor-pointer text-center"
+            >
+              {isAr ? 'الدخول إلى البوابة الموحدة' : 'Open Unified Portal'}
+            </button>
+            <a
+              href={`https://wa.me/${siteContent.whatsappNumber.replace(/[^0-9]/g, '')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 text-center"
+            >
+              <Phone className="w-3.5 h-3.5" />
+              <span>{isAr ? 'استشارة فورية عبر واتساب' : 'WhatsApp Consultation'}</span>
+            </a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
-
