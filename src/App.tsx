@@ -8,6 +8,7 @@ import { AppProvider, useApp } from './context/AppContext.tsx';
 import { CustomizerProvider } from './context/CustomizerContext.tsx';
 import { Header } from './components/Header.tsx';
 import { PreviewStatusBanner } from './components/PreviewStatusBanner.tsx';
+import { StagingRequestsPanel } from './components/StagingRequestsPanel.tsx';
 import { LandingView } from './components/LandingView.tsx';
 import { PortalView } from './components/PortalView.tsx';
 import { StoreBuilderView } from './components/StoreBuilderView.tsx';
@@ -55,6 +56,8 @@ const MainLayout: React.FC = () => {
 
       {/* Visible, truthful release state for the showcase and dashboard */}
       <PreviewStatusBanner />
+
+      <StagingRequestsPanel />
 
       {/* Main View Router */}
       <main className="flex-1">
