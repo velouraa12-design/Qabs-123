@@ -27,10 +27,10 @@ function statusLabel(status: string, isAr: boolean) {
 }
 
 export const StagingRequestsPanel: React.FC = () => {
-  const { user, language, platformRequests, platformRequestsLoading, platformError, refreshPlatformRequests } = useApp();
+  const { mode, user, language, platformRequests, platformRequestsLoading, platformError, refreshPlatformRequests } = useApp();
   const isAr = language === 'ar';
 
-  if (!stagingApiEnabled || !user || user.id === 'guest') return null;
+  if (!stagingApiEnabled || !user || user.id === 'guest' || (mode !== 'portal' && mode !== 'admin')) return null;
 
   return (
     <section
