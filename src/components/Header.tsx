@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
         </div>
 
         {/* Zone 2: Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-5 text-xs font-bold">
+        <nav className="hidden 2xl:flex items-center gap-5 text-xs font-bold">
           <button
             onClick={() => setMode('landing')}
             className={`whitespace-nowrap pb-1 border-b-2 transition-colors cursor-pointer ${
