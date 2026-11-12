@@ -174,7 +174,9 @@ export async function commerceRoute(request, env, url) {
       const current = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
       if (!current) return json({ error: 'CREDITS_NOT_INITIALIZED' }, 409);
       if (current.balance_units < units) return json({ error: 'INSUFFICIENT_CREDITS', balanceUnits: current.balance_units }, 402);
-      const updatedAt = now(); await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, updatedAt, tenantId).run();
+      const updatedAt = now();
+      const update = await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, updatedAt, tenantId).run();
+      if (!update.meta?.changes) return json({ error: 'INSUFFICIENT_CREDITS' }, 402);
       await audit(env.DB, tenantId, user.id, 'credits.consumed', 'credits', tenantId, { units, reason });
       const result = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
       return json({ consumedUnits: units, balanceUnits: result.balance_units });
@@ -185,7 +187,9 @@ export async function commerceRoute(request, env, url) {
       const current = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
       if (!current) return json({ error: 'CREDITS_NOT_INITIALIZED' }, 409);
       if (current.balance_units < units) return json({ error: 'INSUFFICIENT_CREDITS', balanceUnits: current.balance_units }, 402);
-      const timestamp = now(); await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, timestamp, tenantId).run();
+      const timestamp = now();
+      const update = await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, timestamp, tenantId).run();
+      if (!update.meta?.changes) return json({ error: 'INSUFFICIENT_CREDITS' }, 402);
       const usageId = id('aiu'); await env.DB.prepare('INSERT INTO staging_ai_usage (id, tenant_id, user_id, model, units, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(usageId, tenantId, user.id, model, units, timestamp).run();
       await audit(env.DB, tenantId, user.id, 'ai.usage.recorded', 'ai_usage', usageId, { units, model });
       const result = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
@@ -206,6 +210,7 @@ export async function commerceRoute(request, env, url) {
     }
 
     if (url.pathname === base + '/staff' && request.method === 'GET') {
+      if (!isAdmin(user, membership)) return json({ error: 'FORBIDDEN' }, 403);
       const result = await env.DB.prepare('SELECT m.user_id, u.email, m.role, m.created_at FROM staging_tenant_members m JOIN staging_users u ON u.id = m.user_id WHERE m.tenant_id = ?1 ORDER BY m.created_at ASC').bind(tenantId).all();
       return json({ staff: result.results || [] });
     }
