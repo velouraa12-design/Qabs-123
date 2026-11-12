@@ -10,6 +10,54 @@ export interface StagingTenant {
   role: string;
 }
 
+export interface StagingDocument {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface StagingStore {
+  id: string;
+  tenantId: string;
+  name: string;
+  slug: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface StagingProduct {
+  id: string;
+  tenantId: string;
+  storeId: string;
+  name: string;
+  sku: string;
+  priceCents: number;
+  stock: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StagingOrder {
+  id: string;
+  tenantId: string;
+  storeId: string;
+  customerEmail: string | null;
+  status: string;
+  totalCents: number;
+  currency: string;
+  payload: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StagingBillingSummary {
+  subscription: { id: string; plan: string; interval: string; status: string; paymentEnabled: boolean; createdAt: string; updatedAt: string } | null;
+  credits: { balanceUnits: number; updatedAt: string | null };
+  invoices: Array<Record<string, unknown>>;
+}
+
 export interface StagingRequest {
   id: string;
   tenantId: string;
@@ -39,7 +87,7 @@ export const stagingApiEnabled = Boolean(apiBase);
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
-  if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
+  if (init.body && !(init.body instanceof FormData) && !headers.has('content-type')) headers.set('content-type', 'application/json');
   const response = await fetch(`${apiBase}${path}`, { ...init, headers, credentials: 'include' });
   let payload: T & { error?: string };
   try {
@@ -93,5 +141,71 @@ export const stagingPlatformApi = {
       `/api/platform/requests/${encodeURIComponent(id)}/messages`,
       { method: 'POST', body: JSON.stringify({ body: message }) }
     );
+  }
+};
+
+
+export const stagingCommerceApi = {
+  listDocuments() {
+    return request<{ documents: StagingDocument[] }>('/api/platform/documents');
+  },
+  uploadDocument(file: File) {
+    const form = new FormData();
+    form.append('file', file, file.name);
+    return request<{ document: StagingDocument }>('/api/platform/documents', { method: 'POST', body: form });
+  },
+  documentUrl(id: string) {
+    return `${apiBase}/api/platform/documents/${encodeURIComponent(id)}`;
+  },
+  listStores() {
+    return request<{ stores: StagingStore[] }>('/api/platform/stores');
+  },
+  createStore(name: string, slug: string) {
+    return request<{ store: StagingStore }>('/api/platform/stores', { method: 'POST', body: JSON.stringify({ name, slug }) });
+  },
+  listProducts(storeId: string) {
+    return request<{ products: StagingProduct[] }>(`/api/platform/stores/${encodeURIComponent(storeId)}/products`);
+  },
+  createProduct(storeId: string, input: { name: string; sku: string; priceCents: number; stock: number }) {
+    return request<{ product: StagingProduct }>(`/api/platform/stores/${encodeURIComponent(storeId)}/products`, {
+      method: 'POST',
+      body: JSON.stringify({ name: input.name, sku: input.sku, price_cents: input.priceCents, stock: input.stock })
+    });
+  },
+  listOrders(storeId: string) {
+    return request<{ orders: StagingOrder[] }>(`/api/platform/stores/${encodeURIComponent(storeId)}/orders`);
+  },
+  createOrder(storeId: string, input: { totalCents: number; currency: string; customerEmail?: string; payload?: Record<string, unknown> }) {
+    return request<{ order: StagingOrder; paymentEnabled: false }>(`/api/platform/stores/${encodeURIComponent(storeId)}/orders`, {
+      method: 'POST',
+      body: JSON.stringify({ total_cents: input.totalCents, currency: input.currency, customer_email: input.customerEmail, payload: input.payload || {} })
+    });
+  },
+  billingSummary() {
+    return request<StagingBillingSummary>('/api/platform/billing/summary');
+  },
+  consumeCredits(units: number, reason: string) {
+    return request<{ consumedUnits: number; balanceUnits: number }>('/api/platform/billing/credits/consume', {
+      method: 'POST',
+      body: JSON.stringify({ units, reason })
+    });
+  },
+  recordAiUsage(units: number, model = 'qabs-ai-staging') {
+    return request<{ usage: { id: string; model: string; units: number; createdAt: string }; balanceUnits: number }>('/api/platform/ai/usage', {
+      method: 'POST',
+      body: JSON.stringify({ units, model })
+    });
+  },
+  adminSummary() {
+    return request<{ role: string; counts: Record<string, number>; billing: StagingBillingSummary }>('/api/platform/admin/summary');
+  },
+  listStaff() {
+    return request<{ staff: Array<{ userId: string; email: string; role: string; createdAt: string }> }>('/api/platform/staff');
+  },
+  assignStaff(email: string, role: string) {
+    return request<{ staff: { userId: string; email: string; role: string; createdAt: string } }>('/api/platform/staff', {
+      method: 'POST',
+      body: JSON.stringify({ email, role })
+    });
   }
 };
