@@ -29,3 +29,12 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* Keep wide native controls inside the viewport on compact dashboard layouts. */
+@media (max-width: 1023px) {
+  select[class*="bg-white/10"] {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
