@@ -1,0 +1,1 @@
+export const isPublicPreview = (import.meta.env.VITE_QABS_ENV || '').trim().toLowerCase() === 'preview';

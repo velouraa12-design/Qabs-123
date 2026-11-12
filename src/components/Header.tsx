@@ -17,6 +17,7 @@ import {
   User
 } from 'lucide-react';
 import { UserRole } from '../types/index.ts';
+import { isPublicPreview } from '../config/runtime.ts';
 
 interface HeaderProps {
   onOpenFormationModal: () => void;
@@ -52,8 +53,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
           </button>
         </div>
 
-        {/* Zone 2: Navigation Links */}
-        <nav className="hidden 2xl:flex items-center gap-5 text-xs font-bold">
+        {/* Zone 2: Navigation Links — internal routes stay hidden on public preview. */}
+        {!isPublicPreview && <nav className="hidden 2xl:flex items-center gap-5 text-xs font-bold">
           <button
             onClick={() => setMode('landing')}
             className={`whitespace-nowrap pb-1 border-b-2 transition-colors cursor-pointer ${
@@ -124,19 +125,19 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
             <FileCode2 className="w-3.5 h-3.5 text-[#00A896]" />
             <span>{isAr ? 'قالب GitHub' : 'GitHub Template'}</span>
           </button>
-        </nav>
+        </nav>}
 
         {/* Zone 3: Actions (Customizer, Auth, Lang, Theme, Quick CTA) */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Live Content Customizer Trigger */}
-          <button
+          {/* Live Content Customizer Trigger — never expose editor on public preview. */}
+          {!isPublicPreview && <button
             onClick={() => setEditorOpen(true)}
             className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#004457] dark:text-[#D4AF37] bg-[#00A896]/10 hover:bg-[#00A896]/20 rounded-lg border border-[#00A896]/30 transition-colors cursor-pointer"
             title={isAr ? 'تخصيص نصوص وصور وروابط القالب' : 'Live Content Customizer'}
           >
             <Edit3 className="w-3.5 h-3.5 text-[#00A896]" />
             <span className="hidden sm:inline">{isAr ? 'تخصيص القالب' : 'Customize'}</span>
-          </button>
+          </button>}
 
           {/* Auth Button */}
           <button
@@ -167,8 +168,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
             {theme === 'dark' ? <Sun className="w-4 h-4 text-[#D4AF37]" /> : <Moon className="w-4 h-4 text-[#004457]" />}
           </button>
 
-          {/* Perspective / Role Switcher */}
-          <div className="relative">
+          {/* Perspective / Role Switcher — simulation is an internal-only tool. */}
+          {!isPublicPreview && <div className="relative">
             <button
               onClick={() => {
                 setRoleMenuOpen(!roleMenuOpen);
@@ -211,10 +212,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
           {/* Primary Action Button */}
-          <div className="hidden sm:block relative">
+          {!isPublicPreview && <div className="hidden sm:block relative">
             <button
               onClick={() => {
                 setActionMenuOpen(!actionMenuOpen);
@@ -254,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
                 </button>
               </div>
             )}
-          </div>
+          </div>}
         </div>
       </div>
     </header>

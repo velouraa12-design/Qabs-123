@@ -22,6 +22,7 @@ import { AuthModal } from './components/AuthModal.tsx';
 import { ContentEditorModal } from './components/ContentEditorModal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { CheckCircle } from 'lucide-react';
+import { isPublicPreview } from './config/runtime.ts';
 
 const MainLayout: React.FC = () => {
   const { mode, toastMessage } = useApp();
@@ -30,6 +31,7 @@ const MainLayout: React.FC = () => {
   const [selectedStateCode, setSelectedStateCode] = useState<string>('WY');
   const [storeModalOpen, setStoreModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
+  const safeMode = isPublicPreview ? 'landing' : mode;
 
   const handleOpenFormationWithState = (stateCode?: string) => {
     if (stateCode) {
@@ -57,11 +59,11 @@ const MainLayout: React.FC = () => {
       {/* Visible, truthful release state for the showcase and dashboard */}
       <PreviewStatusBanner />
 
-      <StagingRequestsPanel />
+      {!isPublicPreview && <StagingRequestsPanel />}
 
       {/* Main View Router */}
       <main className="flex-1">
-        {mode === 'landing' && (
+        {safeMode === 'landing' && (
           <LandingView
             onOpenFormationModal={handleOpenFormationWithState}
             onOpenStoreModal={() => setStoreModalOpen(true)}
@@ -69,28 +71,28 @@ const MainLayout: React.FC = () => {
           />
         )}
 
-        {mode === 'portal' && (
+        {!isPublicPreview && safeMode === 'portal' && (
           <PortalView
             onOpenFormationModal={() => handleOpenFormationWithState()}
             onOpenStoreModal={() => setStoreModalOpen(true)}
           />
         )}
 
-        {mode === 'store_builder' && (
+        {!isPublicPreview && safeMode === 'store_builder' && (
           <StoreBuilderView
             onOpenStoreModal={() => setStoreModalOpen(true)}
           />
         )}
 
-        {mode === 'billing' && (
+        {!isPublicPreview && safeMode === 'billing' && (
           <BillingSubscriptionView />
         )}
 
-        {mode === 'admin' && (
+        {!isPublicPreview && safeMode === 'admin' && (
           <AdminView />
         )}
 
-        {mode === 'template_hub' && (
+        {!isPublicPreview && safeMode === 'template_hub' && (
           <TemplateHubView />
         )}
       </main>
@@ -117,7 +119,7 @@ const MainLayout: React.FC = () => {
 
       <AuthModal />
 
-      <ContentEditorModal />
+      {!isPublicPreview && <ContentEditorModal />}
     </div>
   );
 };

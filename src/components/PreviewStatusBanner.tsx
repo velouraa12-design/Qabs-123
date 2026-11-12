@@ -1,6 +1,7 @@
 import React from 'react';
 import { Activity, ArrowUpRight, Database, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useApp } from '../context/AppContext.tsx';
+import { isPublicPreview } from '../config/runtime.ts';
 
 export const PreviewStatusBanner: React.FC = () => {
   const { language, mode, setMode } = useApp();
@@ -47,14 +48,14 @@ export const PreviewStatusBanner: React.FC = () => {
               <LockKeyhole className="w-3.5 h-3.5" aria-hidden="true" />
               {isAr ? 'الدفع محمي' : 'Payments gated'}
             </span>
-            <button
+            {!isPublicPreview && <button
               type="button"
               onClick={() => setMode(mode === 'portal' ? 'landing' : 'portal')}
               className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-[#D5B46B] px-3.5 py-2 text-[11px] font-black text-[#14243E] transition-colors hover:bg-[#E8C978] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#14243E]"
             >
               {mode === 'portal' ? (isAr ? 'العودة للموقع' : 'Back to showcase') : isAr ? 'فتح لوحة التحكم' : 'Open dashboard'}
               <ArrowUpRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </button>
+            </button>}
           </div>
         </div>
       </div>
