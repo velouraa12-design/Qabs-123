@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.tsx';
 import { X, Lock, Mail, User, Building, ShieldCheck, KeyRound, CheckCircle2 } from 'lucide-react';
+import { stagingApiEnabled, stagingAuthApi, StagingApiError } from '../services/qabsStagingApi.ts';
 import { UserRole } from '../types/index.ts';
 
 export const AuthModal: React.FC = () => {
@@ -23,24 +24,69 @@ export const AuthModal: React.FC = () => {
   const [companyName, setCompanyName] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>('merchant');
   const [resetSent, setResetSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!authModalOpen) return null;
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    login(email, selectedRole);
+  const apiErrorMessage = (value: unknown) => {
+    const code = value instanceof StagingApiError ? value.code : '';
+    const messages: Record<string, string> = {
+      INVALID_CREDENTIALS: isAr ? 'البريد أو كلمة المرور غير صحيحة.' : 'Invalid email or password.',
+      ACCOUNT_EXISTS: isAr ? 'الحساب موجود؛ استخدم تسجيل الدخول.' : 'Account already exists; sign in instead.',
+      INVALID_EMAIL: isAr ? 'أدخل بريدًا إلكترونيًا صحيحًا.' : 'Enter a valid email address.',
+      INVALID_PASSWORD: isAr ? 'كلمة المرور يجب أن تكون ١٢ حرفًا على الأقل.' : 'Password must be at least 12 characters.',
+      AUTH_TEMPORARILY_UNAVAILABLE: isAr ? 'خدمة المصادقة غير متاحة مؤقتًا.' : 'Authentication is temporarily unavailable.'
+    };
+    return messages[code] || (isAr ? 'تعذر إتمام العملية على الخادم.' : 'The server could not complete the operation.');
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !name) return;
-    register(name, email, companyName || 'QABS Merchant LLC', selectedRole);
+    if (!email || !password) return;
+    setError(null);
+    if (!stagingApiEnabled) {
+      login(email, selectedRole);
+      return;
+    }
+    setBusy(true);
+    try {
+      await stagingAuthApi.login(email, password);
+      // The backend is authoritative; the UI only selects its local presentation mode.
+      login(email, 'merchant');
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !name || !password) return;
+    setError(null);
+    if (!stagingApiEnabled) {
+      register(name, email, companyName || 'QABS Merchant LLC', selectedRole);
+      return;
+    }
+    setBusy(true);
+    try {
+      await stagingAuthApi.register(email, password);
+      register(name, email, companyName || 'QABS Merchant LLC', 'merchant');
+    } catch (err) {
+      setError(apiErrorMessage(err));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleRecoverSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    if (stagingApiEnabled) {
+      setError(isAr ? 'استعادة كلمة المرور غير مفعّلة حتى يتم ربط مزود البريد الحقيقي.' : 'Password recovery is unavailable until a real mail provider is connected.');
+      return;
+    }
     setResetSent(true);
     showToast(
       isAr
@@ -125,6 +171,8 @@ export const AuthModal: React.FC = () => {
 
         {/* Form Body */}
         <div className="p-6 space-y-4">
+          {stagingApiEnabled && <div className="p-2.5 rounded-lg bg-cyan-950/50 border border-cyan-800 text-cyan-200 text-[11px]">{isAr ? 'متصل ببيئة Staging الحقيقية' : 'Connected to the real staging backend'}</div>}
+          {error && <div className="p-2.5 rounded-lg bg-red-950/60 border border-red-800 text-red-200 text-xs">{error}</div>}
           {authMode === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
@@ -250,6 +298,7 @@ export const AuthModal: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-slate-950 font-bold rounded-lg text-xs hover:from-[#C59B27] hover:to-[#E5D28A] transition-all cursor-pointer shadow-md"
               >
                 {isAr ? 'تسجيل الدخول' : 'Sign In Now'}
@@ -328,6 +377,7 @@ export const AuthModal: React.FC = () => {
 
               <button
                 type="submit"
+                disabled={busy}
                 className="w-full py-2.5 bg-gradient-to-r from-[#00A389] to-[#2DD4BF] text-slate-950 font-bold rounded-lg text-xs hover:from-[#008F78] hover:to-[#14B8A6] transition-all cursor-pointer shadow-md"
               >
                 {isAr ? 'إنشاء الحساب وبدء التجربة' : 'Create Free Account'}
