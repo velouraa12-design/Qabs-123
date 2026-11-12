@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext.tsx';
 import { useCustomizer } from '../context/CustomizerContext.tsx';
 import { QabsLogo } from './QabsLogo.tsx';
 import { Phone, Globe } from 'lucide-react';
+import { isPublicPreview } from '../config/runtime.ts';
 
 export const Footer: React.FC = () => {
   const { language, setMode } = useApp();
@@ -28,26 +29,32 @@ export const Footer: React.FC = () => {
               <button onClick={() => setMode('landing')} className="block hover:text-[#00A896] cursor-pointer">
                 {isAr ? 'الموقع التعريفي' : 'Showcase'}
               </button>
-              <button onClick={() => setMode('portal')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'بوابة العميل ومتاجري' : 'Portal & Stores'}
-              </button>
-              <button onClick={() => setMode('store_builder')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'منشئ المتاجر QABS Studio' : 'Store Builder'}
-              </button>
+              {!isPublicPreview && (
+                <>
+                  <button onClick={() => setMode('portal')} className="block hover:text-[#00A896] cursor-pointer">
+                    {isAr ? 'بوابة العميل ومتاجري' : 'Portal & Stores'}
+                  </button>
+                  <button onClick={() => setMode('store_builder')} className="block hover:text-[#00A896] cursor-pointer">
+                    {isAr ? 'منشئ المتاجر QABS Studio' : 'Store Builder'}
+                  </button>
+                </>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <span className="font-extrabold text-[#003445] dark:text-white block">{isAr ? 'الحوكمة والمطورين' : 'Governance'}</span>
-              <button onClick={() => setMode('admin')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'لوحة Super Admin' : 'Super Admin'}
-              </button>
-              <button onClick={() => setMode('billing')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'الاشتراكات والفوترة' : 'Billing & Plans'}
-              </button>
-              <button onClick={() => setMode('template_hub')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'مستودع GitHub Template' : 'GitHub Template'}
-              </button>
-            </div>
+            {!isPublicPreview && (
+              <div className="space-y-2">
+                <span className="font-extrabold text-[#003445] dark:text-white block">{isAr ? 'الحوكمة والمطورين' : 'Governance'}</span>
+                <button onClick={() => setMode('admin')} className="block hover:text-[#00A896] cursor-pointer">
+                  {isAr ? 'لوحة Super Admin' : 'Super Admin'}
+                </button>
+                <button onClick={() => setMode('billing')} className="block hover:text-[#00A896] cursor-pointer">
+                  {isAr ? 'الاشتراكات والفوترة' : 'Billing & Plans'}
+                </button>
+                <button onClick={() => setMode('template_hub')} className="block hover:text-[#00A896] cursor-pointer">
+                  {isAr ? 'مستودع GitHub Template' : 'GitHub Template'}
+                </button>
+              </div>
+            )}
 
             <div className="space-y-2">
               <span className="font-extrabold text-[#003445] dark:text-white block">{isAr ? 'التواصل الرسمي' : 'Official Channels'}</span>
@@ -64,12 +71,14 @@ export const Footer: React.FC = () => {
                 <Globe className="w-3.5 h-3.5 text-[#C8A24A]" />
                 <span className="font-mono">{siteContent.storeDomain}</span>
               </div>
-              <button
-                onClick={() => setEditorOpen(true)}
-                className="text-[11px] font-bold text-[#007F8B] dark:text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer pt-1"
-              >
-                <span>✏️ {isAr ? 'تخصيص محتوى القالب' : 'Live Content Customizer'}</span>
-              </button>
+              {!isPublicPreview && (
+                <button
+                  onClick={() => setEditorOpen(true)}
+                  className="text-[11px] font-bold text-[#007F8B] dark:text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer pt-1"
+                >
+                  <span>✏️ {isAr ? 'تخصيص محتوى القالب' : 'Live Content Customizer'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

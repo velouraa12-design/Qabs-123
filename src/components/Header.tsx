@@ -139,15 +139,15 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
             <span className="hidden sm:inline">{isAr ? 'تخصيص القالب' : 'Customize'}</span>
           </button>}
 
-          {/* Auth Button */}
-          <button
+          {/* Auth Button — public preview is synthetic-only and does not expose mock auth. */}
+          {!isPublicPreview && <button
             onClick={() => setAuthModalOpen(true)}
             className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#004457] dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700 transition-colors cursor-pointer"
             title={isAr ? 'تسجيل الدخول / الحساب' : 'Account Login'}
           >
             <User className="w-3.5 h-3.5 text-[#00A896]" />
             <span className="hidden sm:inline">{user.name.split(' ')[0]}</span>
-          </button>
+          </button>}
 
           {/* Language Switch */}
           <button

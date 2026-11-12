@@ -36,18 +36,33 @@ export const PreviewStatusBanner: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 text-[11px] font-bold">
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1.5 text-emerald-100">
-              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-              {isAr ? 'CI ناجح' : 'CI passed'}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300/25 bg-sky-300/10 px-2.5 py-1.5 text-sky-100">
-              <Database className="w-3.5 h-3.5" aria-hidden="true" />
-              {isAr ? 'Backend قيد الربط' : 'Backend in progress'}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#D5B46B]/35 bg-[#D5B46B]/10 px-2.5 py-1.5 text-[#F2D995]">
-              <LockKeyhole className="w-3.5 h-3.5" aria-hidden="true" />
-              {isAr ? 'الدفع محمي' : 'Payments gated'}
-            </span>
+            {isPublicPreview ? (
+              <>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300/25 bg-sky-300/10 px-2.5 py-1.5 text-sky-100">
+                  <Database className="w-3.5 h-3.5" aria-hidden="true" />
+                  {isAr ? 'بيانات اصطناعية فقط' : 'Synthetic data only'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#D5B46B]/35 bg-[#D5B46B]/10 px-2.5 py-1.5 text-[#F2D995]">
+                  <LockKeyhole className="w-3.5 h-3.5" aria-hidden="true" />
+                  {isAr ? 'الدفع غير مفعّل' : 'Payments disabled'}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-2.5 py-1.5 text-emerald-100">
+                  <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
+                  {isAr ? 'CI ناجح' : 'CI passed'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-sky-300/25 bg-sky-300/10 px-2.5 py-1.5 text-sky-100">
+                  <Database className="w-3.5 h-3.5" aria-hidden="true" />
+                  {isAr ? 'Backend قيد الربط' : 'Backend in progress'}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-lg border border-[#D5B46B]/35 bg-[#D5B46B]/10 px-2.5 py-1.5 text-[#F2D995]">
+                  <LockKeyhole className="w-3.5 h-3.5" aria-hidden="true" />
+                  {isAr ? 'الدفع محمي' : 'Payments gated'}
+                </span>
+              </>
+            )}
             {!isPublicPreview && <button
               type="button"
               onClick={() => setMode(mode === 'portal' ? 'landing' : 'portal')}
