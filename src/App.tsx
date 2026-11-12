@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext.tsx';
 import { CustomizerProvider } from './context/CustomizerContext.tsx';
 import { Header } from './components/Header.tsx';
+import { PreviewStatusBanner } from './components/PreviewStatusBanner.tsx';
 import { LandingView } from './components/LandingView.tsx';
 import { PortalView } from './components/PortalView.tsx';
 import { StoreBuilderView } from './components/StoreBuilderView.tsx';
@@ -51,6 +52,9 @@ const MainLayout: React.FC = () => {
         onOpenFormationModal={() => handleOpenFormationWithState()}
         onOpenStoreModal={() => setStoreModalOpen(true)}
       />
+
+      {/* Visible, truthful release state for the showcase and dashboard */}
+      <PreviewStatusBanner />
 
       {/* Main View Router */}
       <main className="flex-1">

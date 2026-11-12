@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
         </div>
 
         {/* Zone 2: Navigation Links */}
-        <nav className="hidden xl:flex items-center gap-5 text-xs font-bold">
+        <nav className="hidden 2xl:flex items-center gap-5 text-xs font-bold">
           <button
             onClick={() => setMode('landing')}
             className={`whitespace-nowrap pb-1 border-b-2 transition-colors cursor-pointer ${
@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
           {/* Live Content Customizer Trigger */}
           <button
             onClick={() => setEditorOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#004457] dark:text-[#D4AF37] bg-[#00A896]/10 hover:bg-[#00A896]/20 rounded-lg border border-[#00A896]/30 transition-colors cursor-pointer"
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#004457] dark:text-[#D4AF37] bg-[#00A896]/10 hover:bg-[#00A896]/20 rounded-lg border border-[#00A896]/30 transition-colors cursor-pointer"
             title={isAr ? 'تخصيص نصوص وصور وروابط القالب' : 'Live Content Customizer'}
           >
             <Edit3 className="w-3.5 h-3.5 text-[#00A896]" />
@@ -214,7 +214,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFormationModal, onOpenStor
           </div>
 
           {/* Primary Action Button */}
-          <div className="relative">
+          <div className="hidden sm:block relative">
             <button
               onClick={() => {
                 setActionMenuOpen(!actionMenuOpen);
