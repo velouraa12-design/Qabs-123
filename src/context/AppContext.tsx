@@ -47,6 +47,7 @@ import {
   INITIAL_STORE_TEMPLATES,
   DEFAULT_STORE_SECTIONS
 } from '../data/mockData.ts';
+import { stagingApiEnabled, stagingPlatformApi, StagingApiError, StagingRequest } from '../services/qabsStagingApi.ts';
 
 interface AppContextType {
   language: Language;
@@ -58,13 +59,13 @@ interface AppContextType {
   user: UserProfile;
   switchRole: (role: UserRole) => void;
   companies: CompanyFormation[];
-  addCompany: (comp: Omit<CompanyFormation, 'id' | 'filingDate' | 'status' | 'documents'>) => void;
+  addCompany: (comp: Omit<CompanyFormation, 'id' | 'filingDate' | 'status' | 'documents'>) => void | Promise<void>;
   updateCompanyStatus: (id: string, status: CompanyFormation['status']) => void;
   // QABS Stores Multi-Tenant Core
   stores: StoreInstance[];
   activeStoreId: string;
   setActiveStoreId: (id: string) => void;
-  addStore: (store: Omit<StoreInstance, 'id' | 'productsCount' | 'ordersCount' | 'totalRevenue' | 'createdAt'>) => void;
+  addStore: (store: Omit<StoreInstance, 'id' | 'productsCount' | 'ordersCount' | 'totalRevenue' | 'createdAt'>) => void | Promise<void>;
   updateStoreTheme: (id: string, theme: StoreInstance['theme'], customDomain?: string) => void;
   updateStoreDetails: (id: string, updates: Partial<StoreInstance>) => void;
   submitStoreForApproval: (storeId: string) => void;
@@ -107,7 +108,7 @@ interface AppContextType {
   banking: BankingAccount[];
   addBankAccount: (bank: Omit<BankingAccount, 'id' | 'balance' | 'status'>) => void;
   tickets: SupportTicket[];
-  addTicket: (t: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'status'>) => void;
+  addTicket: (t: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'status'>) => void | Promise<void>;
   resolveTicket: (id: string) => void;
   staff: StaffMember[];
   addStaff: (s: Omit<StaffMember, 'id' | 'lastActive' | 'status'>) => void;
@@ -129,6 +130,10 @@ interface AppContextType {
   logout: () => void;
   toastMessage: string | null;
   showToast: (msg: string) => void;
+  platformRequests: StagingRequest[];
+  platformRequestsLoading: boolean;
+  platformError: string | null;
+  refreshPlatformRequests: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -161,6 +166,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(INITIAL_AUDIT_LOGS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [platformRequests, setPlatformRequests] = useState<StagingRequest[]>([]);
+  const [platformRequestsLoading, setPlatformRequestsLoading] = useState(false);
+  const [platformError, setPlatformError] = useState<string | null>(null);
 
   // Subscription & Billing states
   const [subscription, setSubscription] = useState<UserSubscription>(INITIAL_USER_SUBSCRIPTION);
@@ -202,6 +210,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3500);
   };
 
+  const refreshPlatformRequests = async () => {
+    if (!stagingApiEnabled || user.id === 'guest') return;
+    setPlatformRequestsLoading(true);
+    setPlatformError(null);
+    try {
+      const result = await stagingPlatformApi.listRequests();
+      setPlatformRequests(result.requests);
+    } catch (error) {
+      const code = error instanceof StagingApiError ? error.code : 'STAGING_API_ERROR';
+      setPlatformError(code);
+    } finally {
+      setPlatformRequestsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshPlatformRequests();
+  }, [user.id]);
+
   const appendAudit = (actionAr: string, actionEn: string, target: string, status: AuditLogItem['status'] = 'success') => {
     setAuditLogs(prev => [
       {
@@ -237,7 +264,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const addCompany = (comp: Omit<CompanyFormation, 'id' | 'filingDate' | 'status' | 'documents'>) => {
+  const addCompany = async (comp: Omit<CompanyFormation, 'id' | 'filingDate' | 'status' | 'documents'>) => {
+    if (stagingApiEnabled) {
+      try {
+        await stagingPlatformApi.createRequest(`formation.${comp.entityType}`, `formation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, { company: comp });
+        await refreshPlatformRequests();
+      } catch (error) {
+        const code = error instanceof StagingApiError ? error.code : 'STAGING_API_ERROR';
+        showToast(language === 'ar' ? `تعذر حفظ طلب التأسيس على الخادم (${code})` : `Could not save formation request (${code})`);
+        return;
+      }
+    }
     const newComp: CompanyFormation = {
       ...comp,
       id: `comp_${Date.now()}`,
@@ -254,9 +291,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // --- QABS STORES MULTI-TENANT ACTIONS ---
-  const addStore = (
+  const addStore = async (
     storeData: Omit<StoreInstance, 'id' | 'productsCount' | 'ordersCount' | 'totalRevenue' | 'createdAt'>
   ) => {
+    if (stagingApiEnabled) {
+      try {
+        await stagingPlatformApi.createRequest('store', `store-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, { store: storeData });
+        await refreshPlatformRequests();
+      } catch (error) {
+        const code = error instanceof StagingApiError ? error.code : 'STAGING_API_ERROR';
+        showToast(language === 'ar' ? `تعذر حفظ طلب المتجر على الخادم (${code})` : `Could not save store request (${code})`);
+        return;
+      }
+    }
     const newStoreId = `store_${Date.now()}`;
     const today = new Date().toISOString().split('T')[0];
     const newStore: StoreInstance = {
@@ -795,7 +842,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setBanking(prev => [newAccount, ...prev]);
   };
 
-  const addTicket = (t: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'status'>) => {
+  const addTicket = async (t: Omit<SupportTicket, 'id' | 'ticketNumber' | 'createdAt' | 'updatedAt' | 'status'>) => {
+    if (stagingApiEnabled) {
+      try {
+        await stagingPlatformApi.createRequest('support', `support-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, { ticket: t });
+        await refreshPlatformRequests();
+      } catch (error) {
+        const code = error instanceof StagingApiError ? error.code : 'STAGING_API_ERROR';
+        showToast(language === 'ar' ? `تعذر حفظ تذكرة الدعم على الخادم (${code})` : `Could not save support ticket (${code})`);
+        return;
+      }
+    }
     const newTicket: SupportTicket = {
       ...t,
       id: `tkt_${Date.now()}`,
@@ -1008,7 +1065,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         register,
         logout,
         toastMessage,
-        showToast
+        showToast,
+        platformRequests,
+        platformRequestsLoading,
+        platformError,
+        refreshPlatformRequests
       }}
     >
       {children}
