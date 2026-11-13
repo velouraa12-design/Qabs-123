@@ -76,8 +76,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
     {
       qAr: 'ما هو الفرق بين التأسيس في وايومنغ (Wyoming) وديلاوير (Delaware)؟',
       qEn: 'What is the difference between Wyoming and Delaware formation?',
-      aAr: 'ولاية وايومنغ هي الخيار الأول للتجارة الإلكترونية والأنشطة الرقمية بفضل خصوصية الملاك العالية وانعدام ضريبة الدخل والرسوم السنوية المنخفضة ($60). بينما ولاية ديلاوير هي المعيار الذهبي للشركات التقنية الناشئة التي تخطط لجذب استثمارات ورؤوس أموال مغامرة (VC).',
-      aEn: 'Wyoming is ideal for e-commerce and digital founders due to complete privacy, zero state income tax, and low annual fees ($60). Delaware is the premier standard for tech startups seeking venture capital and institutional funding.'
+      aAr: 'يبلغ الحد الأدنى لرسم التقرير السنوي في وايومنغ 60 دولاراً وقد يزيد بحسب أصول الشركة في الولاية. تختلف المتطلبات والضرائب والبيانات العامة بحسب الحالة؛ راجع الجهات الرسمية ومستشاراً مختصاً.',
+      aEn: 'Wyoming’s annual report fee starts at $60 and may increase with assets located in the state. Requirements, taxes and public disclosures vary; consult official sources and a qualified adviser.'
     },
     {
       qAr: 'كم يستغرق إصدار الرقم الضريبي الفيدرالي EIN للشركات لغير المقيمين؟',
@@ -250,34 +250,34 @@ export const LandingView: React.FC<LandingViewProps> = ({
           <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl sm:text-3xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
-                +1,450
+                {isAr ? 'تأسيس' : 'Formation'}
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
-                {isAr ? 'شركة تم تأسيسها رسمياً' : 'Companies Incorporated'}
+                {isAr ? 'خدمات تأسيس الشركات' : 'Company formation services'}
               </div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
-                100%
+                EIN
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
-                {isAr ? 'نسبة نجاح استخراج EIN' : 'EIN Issuance Success'}
+                {isAr ? 'المساعدة في طلب الرقم الضريبي' : 'EIN application assistance'}
               </div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
-                48h
+                {isAr ? 'متابعة' : 'Tracking'}
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
-                {isAr ? 'متوسط سرعة الإيداع لدى الولاية' : 'Avg State Filing Speed'}
+                {isAr ? 'تختلف المدد بحسب الجهة' : 'Timelines vary by authority'}
               </div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
-                $0
+                {isAr ? 'الرسوم' : 'Fees'}
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
-                {isAr ? 'ضريبة دخل في وايومنغ' : 'State Tax in Wyoming'}
+                {isAr ? 'تُراجع قبل التقديم' : 'Reviewed before filing'}
               </div>
             </div>
           </div>
@@ -490,8 +490,8 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   {isAr ? 'وايومنغ (Wyoming - WY) ⭐' : 'Wyoming (WY)'}
                 </td>
                 <td className="p-4 text-emerald-600 font-bold">0% (معفاة تماماً)</td>
-                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سرية تامة (لا تظهر بالسجلات العامة)</td>
-                <td className="p-4 font-mono">$60 / سنوياً</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{isAr ? 'تختلف البيانات العامة حسب المتطلبات' : 'Public disclosures vary by requirement'}</td>
+                <td className="p-4 font-mono">{isAr ? '60 دولاراً كحد أدنى سنوياً؛ قد يزيد بحسب الأصول' : '$60 annual minimum; may increase with assets'}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">التجارة الإلكترونية، المتاجر الرقمية، والخدمات عن بعد</td>
                 <td className="p-4 text-center">
                   <button
@@ -524,7 +524,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   {isAr ? 'نيو مكسيكو (New Mexico - NM)' : 'New Mexico (NM)'}
                 </td>
                 <td className="p-4 text-emerald-600 font-bold">0% (للأعمال الخارجية)</td>
-                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سرية تامة ومطلقة للملاك</td>
+                <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{isAr ? 'تختلف البيانات العامة حسب المتطلبات' : 'Public disclosures vary by requirement'}</td>
                 <td className="p-4 font-mono text-emerald-600 font-bold">$0 (لا يوجد تقرير سنوي)</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">أقل تكلفة صيانة سنوية وميزانية اقتصادية</td>
                 <td className="p-4 text-center">
@@ -542,7 +542,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 </td>
                 <td className="p-4 text-slate-700 dark:text-slate-300 font-bold">ضريبة الشركات البريطانية</td>
                 <td className="p-4 font-bold text-slate-800 dark:text-slate-200">سجل Companies House الرسمي</td>
-                <td className="p-4 font-mono">£13 تقرير تأكيد سنوي</td>
+                <td className="p-4 font-mono">{isAr ? '£50 للتقديم الرقمي (من 1 فبراير 2026)' : '£50 online filing (from 1 February 2026)'}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">التجارة مع بريطانيا وأوروبا وبوابات الدفع بالجنيه الإسترليني</td>
                 <td className="p-4 text-center">
                   <button
@@ -565,13 +565,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
             <div>
               <span className="text-xs font-black text-[#00A896]">
                 {isAr
-                  ? 'أسعار كافة الولايات الأمريكية بشفافية تامة — شاملة الرسوم الحكومية'
-                  : 'Transparent All 50 US States Formation Pricing — Including State Filing Fees'}
+                  ? 'أسعار خدمات التأسيس ورسوم الولايات بشكل منفصل'
+                  : 'US formation service prices and state filing fees shown separately'}
               </span>
               <h3 className="text-lg sm:text-xl font-black text-[#003445] dark:text-white mt-0.5">
                 {isAr
-                  ? 'تشمل جميع الباقات: رسوم سكرتير الولاية الحكومية + تأسيس (50 ولاية أمريكية)'
-                  : 'All Packages Include: Secretary of State Filing Fee + Formation (All 50 US States)'}
+                  ? 'رسوم الخدمة بالإضافة إلى رسوم الولاية؛ قد تطبق رسوم إضافية'
+                  : 'Service price plus state filing fee; additional charges may apply'}
               </h3>
             </div>
 
