@@ -18,25 +18,21 @@ import { TemplateHubView } from './components/TemplateHubView.tsx';
 import { FormationWizardModal } from './components/FormationWizardModal.tsx';
 import { NewStoreModal } from './components/NewStoreModal.tsx';
 import { AIChatModal } from './components/AIChatModal.tsx';
-import { AuthModal } from './components/AuthModal.tsx';
-import { ContentEditorModal } from './components/ContentEditorModal.tsx';
 import { Footer } from './components/Footer.tsx';
 import { CheckCircle } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
-  const { mode, toastMessage } = useApp();
+  const { mode, toastMessage, showToast, language } = useApp();
 
   const [formationModalOpen, setFormationModalOpen] = useState(false);
   const [selectedStateCode, setSelectedStateCode] = useState<string>('WY');
   const [storeModalOpen, setStoreModalOpen] = useState(false);
   const [aiModalOpen, setAiModalOpen] = useState(false);
 
-  const handleOpenFormationWithState = (stateCode?: string) => {
-    if (stateCode) {
-      setSelectedStateCode(stateCode);
-    }
-    setFormationModalOpen(true);
-  };
+  const unavailable = () => showToast(language === 'ar'
+    ? 'هذه الخدمة غير متاحة في المعاينة الحالية.'
+    : 'This service is unavailable in the current preview.');
+  const handleOpenFormationWithState = (_stateCode?: string) => unavailable();
 
   return (
     <div className="min-h-screen bg-[#F7FAFA] dark:bg-[#03131D] text-[#003E52] dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-[#00A896]/25 selection:text-[#003445] dark:selection:text-white">
@@ -51,7 +47,7 @@ const MainLayout: React.FC = () => {
       {/* Header */}
       <Header
         onOpenFormationModal={() => handleOpenFormationWithState()}
-        onOpenStoreModal={() => setStoreModalOpen(true)}
+        onOpenStoreModal={unavailable}
       />
 
       {/* Visible, truthful release state for the showcase and dashboard */}
@@ -64,21 +60,20 @@ const MainLayout: React.FC = () => {
         {mode === 'landing' && (
           <LandingView
             onOpenFormationModal={handleOpenFormationWithState}
-            onOpenStoreModal={() => setStoreModalOpen(true)}
-            onOpenAIModal={() => setAiModalOpen(true)}
+            onOpenStoreModal={unavailable}
           />
         )}
 
         {mode === 'portal' && (
           <PortalView
             onOpenFormationModal={() => handleOpenFormationWithState()}
-            onOpenStoreModal={() => setStoreModalOpen(true)}
+            onOpenStoreModal={unavailable}
           />
         )}
 
         {mode === 'store_builder' && (
           <StoreBuilderView
-            onOpenStoreModal={() => setStoreModalOpen(true)}
+            onOpenStoreModal={unavailable}
           />
         )}
 
@@ -115,9 +110,7 @@ const MainLayout: React.FC = () => {
         onClose={() => setAiModalOpen(false)}
       />
 
-      <AuthModal />
 
-      <ContentEditorModal />
     </div>
   );
 };
