@@ -2,7 +2,7 @@ name: QABS Platform CI & Quality Check
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, fix/qabs-authorized-remediation-20261113 ]
   pull_request:
     branches: [ main, master ]
 
@@ -17,7 +17,7 @@ jobs:
     - name: Setup Node.js Environment
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 24
 
     - name: Install Dependencies
       run: npm install --ignore-scripts --legacy-peer-deps
@@ -25,14 +25,17 @@ jobs:
     - name: Run TypeScript & Lint Checks
       run: npm run lint
 
+    - name: Test credit transactions (local SQLite model)
+      run: npm run test:credits
+
     - name: Build Application Bundle
       run: npm run build
 
     - name: Security & Secret Scan
       run: |
-        echo "Running zero-leak secrets audit..."
+        echo "Running limited pattern scan..."
         if grep -rn "sk_live_" src/ || grep -rn "AKIA[0-9A-Z]" src/; then
           echo "ERROR: Discovered live secret in codebase!"
           exit 1
         fi
-        echo "Security check passed: 100% clean."
+        echo "Limited pattern scan passed; this is not a comprehensive secret audit."
