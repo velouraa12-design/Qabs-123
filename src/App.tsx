@@ -1,133 +1,75 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+import React, {useEffect, useState} from 'react';
+import { ArrowUpRight, ArrowRight, Building2, Check, ChevronDown, CircleHelp, CreditCard, FileText, Globe2, LayoutDashboard, LockKeyhole, Menu, MessageCircle, Package, PanelTop, Settings, ShieldCheck, ShoppingBag, Sparkles, Store, Wallet, X } from 'lucide-react';
+import { qabsHero } from './qabsHero';
+import { qabsLogo } from './qabsLogo';
+import './redesign.css';
 
-import React, { useState } from 'react';
-import { AppProvider, useApp } from './context/AppContext.tsx';
-import { CustomizerProvider } from './context/CustomizerContext.tsx';
-import { Header } from './components/Header.tsx';
-import { PreviewStatusBanner } from './components/PreviewStatusBanner.tsx';
-import { StagingRequestsPanel } from './components/StagingRequestsPanel.tsx';
-import { LandingView } from './components/LandingView.tsx';
-import { PortalView } from './components/PortalView.tsx';
-import { StoreBuilderView } from './components/StoreBuilderView.tsx';
-import { BillingSubscriptionView } from './components/BillingSubscriptionView.tsx';
-import { AdminView } from './components/AdminView.tsx';
-import { TemplateHubView } from './components/TemplateHubView.tsx';
-import { FormationWizardModal } from './components/FormationWizardModal.tsx';
-import { NewStoreModal } from './components/NewStoreModal.tsx';
-import { AIChatModal } from './components/AIChatModal.tsx';
-import { AuthModal } from './components/AuthModal.tsx';
-import { ContentEditorModal } from './components/ContentEditorModal.tsx';
-import { Footer } from './components/Footer.tsx';
-import { CheckCircle } from 'lucide-react';
-
-const MainLayout: React.FC = () => {
-  const { mode, toastMessage } = useApp();
-
-  const [formationModalOpen, setFormationModalOpen] = useState(false);
-  const [selectedStateCode, setSelectedStateCode] = useState<string>('WY');
-  const [storeModalOpen, setStoreModalOpen] = useState(false);
-  const [aiModalOpen, setAiModalOpen] = useState(false);
-
-  const handleOpenFormationWithState = (stateCode?: string) => {
-    if (stateCode) {
-      setSelectedStateCode(stateCode);
-    }
-    setFormationModalOpen(true);
-  };
-
-  return (
-    <div className="min-h-screen bg-[#F7FAFA] dark:bg-[#03131D] text-[#003E52] dark:text-slate-100 flex flex-col font-sans transition-colors selection:bg-[#00A896]/25 selection:text-[#003445] dark:selection:text-white">
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white dark:bg-[#082030] border-2 border-[#00A896] text-[#003445] dark:text-white text-xs font-bold shadow-2xl animate-fade-in">
-          <CheckCircle className="w-4 h-4 text-[#00A896] shrink-0" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <Header
-        onOpenFormationModal={() => handleOpenFormationWithState()}
-        onOpenStoreModal={() => setStoreModalOpen(true)}
-      />
-
-      {/* Visible, truthful release state for the showcase and dashboard */}
-      <PreviewStatusBanner />
-
-      <StagingRequestsPanel />
-
-      {/* Main View Router */}
-      <main className="flex-1">
-        {mode === 'landing' && (
-          <LandingView
-            onOpenFormationModal={handleOpenFormationWithState}
-            onOpenStoreModal={() => setStoreModalOpen(true)}
-            onOpenAIModal={() => setAiModalOpen(true)}
-          />
-        )}
-
-        {mode === 'portal' && (
-          <PortalView
-            onOpenFormationModal={() => handleOpenFormationWithState()}
-            onOpenStoreModal={() => setStoreModalOpen(true)}
-          />
-        )}
-
-        {mode === 'store_builder' && (
-          <StoreBuilderView
-            onOpenStoreModal={() => setStoreModalOpen(true)}
-          />
-        )}
-
-        {mode === 'billing' && (
-          <BillingSubscriptionView />
-        )}
-
-        {mode === 'admin' && (
-          <AdminView />
-        )}
-
-        {mode === 'template_hub' && (
-          <TemplateHubView />
-        )}
-      </main>
-
-      {/* Footer */}
-      <Footer />
-
-      {/* Global Modals */}
-      <FormationWizardModal
-        isOpen={formationModalOpen}
-        onClose={() => setFormationModalOpen(false)}
-        initialStateCode={selectedStateCode}
-      />
-
-      <NewStoreModal
-        isOpen={storeModalOpen}
-        onClose={() => setStoreModalOpen(false)}
-      />
-
-      <AIChatModal
-        isOpen={aiModalOpen}
-        onClose={() => setAiModalOpen(false)}
-      />
-
-      <AuthModal />
-
-      <ContentEditorModal />
-    </div>
-  );
-};
-
-export default function App() {
-  return (
-    <AppProvider>
-      <CustomizerProvider>
-        <MainLayout />
-      </CustomizerProvider>
-    </AppProvider>
-  );
+type Lang = 'ar' | 'en';
+type Icon = React.ComponentType<{size?: number, className?:string, 'aria-hidden'?: boolean}>;
+type Pair = { ar: string; en: string };
+const pick=(x:Pair,l:Lang)=>x[l];
+const services: {id:string,title:Pair,desc:Pair,icon:Icon,tag:Pair}[] = [
+ {id:'formation',icon:Building2,title:{ar:'تأسيس الشركات',en:'Company formation'},desc:{ar:'ابدأ رحلة تأسيس شركتك بخطوات واضحة ومتطلبات مفهومة.',en:'Navigate company formation with a clearer view of each step.'},tag:{ar:'الانطلاق',en:'GET STARTED'}},
+ {id:'compliance',icon:ShieldCheck,title:{ar:'الامتثال والتجديد',en:'Compliance & renewals'},desc:{ar:'تعرّف على المتطلبات الدورية ومواعيد المتابعة لشركتك.',en:'Understand recurring requirements and important follow-ups.'},tag:{ar:'المتابعة',en:'STAY ON TRACK'}},
+ {id:'stores',icon:Store,title:{ar:'المتاجر الإلكترونية',en:'Online stores'},desc:{ar:'صمّم حضور متجرك واستكشف أدوات تنظيم المنتجات والطلبات.',en:'Explore a workspace for your store, products and orders.'},tag:{ar:'التجارة',en:'COMMERCE'}},
+ {id:'payments',icon:CreditCard,title:{ar:'حلول الدفع',en:'Payment solutions'},desc:{ar:'راجع خيارات الدفع ومتطلبات الأهلية لدى مزودي الخدمة.',en:'Explore payment options and provider eligibility requirements.'},tag:{ar:'الحلول المالية',en:'FINANCIAL TOOLS'}},
+ {id:'digital',icon:PanelTop,title:{ar:'الحلول الرقمية',en:'Digital solutions'},desc:{ar:'تعرّف على خدمات المواقع والهوية والحضور الرقمي.',en:'Discover services for websites, branding and digital presence.'},tag:{ar:'النمو',en:'GROWTH'}},
+ {id:'branding',icon:Sparkles,title:{ar:'الهوية البصرية',en:'Brand identity'},desc:{ar:'اكتشف خدمات تطوير هوية تعبّر عن مشروعك.',en:'Explore identity services that help express your business.'},tag:{ar:'الهوية',en:'BRAND'}},
+ {id:'marketing',icon:Globe2,title:{ar:'التسويق والتواصل',en:'Marketing & communications'},desc:{ar:'استكشف خيارات تنظيم حضور مشروعك الرقمي.',en:'Explore options for your digital communications.'},tag:{ar:'التواصل',en:'COMMUNICATIONS'}},
+ {id:'consulting',icon:MessageCircle,title:{ar:'الاستشارات',en:'Consulting'},desc:{ar:'تعرف على مسارات المساندة والتخطيط لأعمالك.',en:'Learn about planning and advisory pathways.'},tag:{ar:'التخطيط',en:'PLANNING'}},
+ {id:'advisor',icon:Sparkles,title:{ar:'مستشار قبس',en:'QABS advisor'},desc:{ar:'استكشف واجهة المساعدة الذكية وأدوات المتابعة المستقبلية.',en:'Preview the future intelligent assistance experience.'},tag:{ar:'الذكاء الاصطناعي',en:'AI EXPERIENCE'}}
+];
+const tabs: {id:string,label:Pair,icon:Icon}[]=[
+ {id:'overview',label:{ar:'نظرة عامة',en:'Overview'},icon:LayoutDashboard},
+ {id:'requests',label:{ar:'الطلبات',en:'Requests'},icon:FileText},
+ {id:'documents',label:{ar:'المستندات',en:'Documents'},icon:Package},
+ {id:'stores',label:{ar:'متاجري',en:'My stores'},icon:ShoppingBag},
+ {id:'billing',label:{ar:'الاشتراكات والفواتير',en:'Billing & plans'},icon:CreditCard},
+ {id:'ai',label:{ar:'قبس AI والأرصدة',en:'QABS AI & credits'},icon:Sparkles},
+ {id:'crypto',label:{ar:'العملات الرقمية',en:'Digital currencies'},icon:Wallet},
+ {id:'support',label:{ar:'الدعم',en:'Support'},icon:MessageCircle},
+ {id:'settings',label:{ar:'الإعدادات',en:'Settings'},icon:Settings}
+];
+const tr=(ar:string,en:string,l:Lang)=>l==='ar'?ar:en;
+function getRoute(){return (window.location.hash.slice(1)||'/').split('?')[0]}
+function go(route:string){window.location.hash=route; window.scrollTo({top:0,behavior:'instant'});}
+function App(){
+ const [lang,setLang]=useState<Lang>(()=>localStorage.getItem('qabs_lang')==='en'?'en':'ar');
+ const [route,setRoute]=useState(getRoute); const [menu,setMenu]=useState(false);
+ useEffect(()=>{document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';localStorage.setItem('qabs_lang',lang)},[lang]);
+ useEffect(()=>{const h=()=>{setRoute(getRoute());setMenu(false)};window.addEventListener('hashchange',h);return()=>window.removeEventListener('hashchange',h)},[]);
+ const L=(ar:string,en:string)=>tr(ar,en,lang); const service=services.find(s=>route===`/services/${s.id}`);
+ const tab=tabs.find(t=>route===`/workspace/${t.id}`);
+ const known=route==='/'||route==='/login'||route==='/register'||route==='/recover'||route==='/workspace/admin'||!!service||!!tab;
+ const Link=({to,children,className=''}:{to:string,children:React.ReactNode,className?:string})=><a className={className} href={'#'+to} onClick={()=>{setMenu(false);window.scrollTo({top:0,behavior:'instant'})}}>{children}</a>;
+ const unavailable=L('معاينة فقط · لا تُرسل بيانات أو تُنفّذ عمليات','Preview only · no data is submitted or operations performed');
+ return <div className="site">
+  <a className="skip" href="#main">{L('تجاوز إلى المحتوى','Skip to content')}</a>
+  <header className="topbar"><div className="wrap topinner">
+   <Link to="/" className="brand"><img src={qabsLogo} alt={L('قبس QABS — الصفحة الرئيسية','QABS — home')}/></Link>
+   <nav className={'topnav '+(menu?'open':'')} aria-label={L('التنقل الرئيسي','Main navigation')}>
+    <Link to="/">{L('الرئيسية','Home')}</Link><a href="#services" onClick={(e)=>{e.preventDefault();if(route!=='/'){go('/');setTimeout(()=>document.getElementById('services')?.scrollIntoView(),100)}else document.getElementById('services')?.scrollIntoView();setMenu(false)}}>{L('خدماتنا','Services')}</a><Link to="/workspace/overview">{L('استكشف البوابة','Explore workspace')}</Link>
+   </nav>
+   <div className="topactions"><button className="language" onClick={()=>setLang(lang==='ar'?'en':'ar')} aria-label={L('EN — التحويل إلى الإنجليزية','عربي — switch to Arabic')}><Globe2 size={17}/>{lang==='ar'?'EN':'عربي'}</button><Link className="account" to="/login">{L('تسجيل الدخول','Sign in')} <ArrowUpRight size={16}/></Link><button className="mobilemenu" aria-expanded={menu} aria-label={menu?L('إغلاق القائمة','Close menu'):L('فتح القائمة','Open menu')} onClick={()=>setMenu(!menu)}>{menu?<X size={22}/>:<Menu size={22}/>}</button></div>
+  </div></header>
+  <div className="notice"><div className="wrap"><span className="notice-dot"/> {unavailable}</div></div>
+  <main id="main">
+   {route==='/'&&<>
+    <section className="hero wrap"><div className="hero-copy"><div className="eyebrow"><span/> {L('مساحة أعمالك، برؤية أوضح','A CLEARER WAY TO BUILD')}</div><h1>{L('فكرتك تستحق','Your ambition')}<br/><em>{L('بداية واثقة.','deserves a clear start.')}</em></h1><p>{L('من تأسيس شركتك إلى بناء حضورك الرقمي، اكتشف خدمات قبس في مكان واحد مصمم لينمو مع أعمالك.','From forming a company to building a digital presence, explore QABS services in one considered space.')}</p><div className="hero-actions"><a className="btn btn-primary" href="#services" onClick={e=>{e.preventDefault();document.getElementById('services')?.scrollIntoView()}}>{L('اكتشف خدماتنا','Explore services')} <ArrowUpRight size={18}/></a><Link className="btn btn-outline" to="/workspace/overview">{L('معاينة البوابة','Preview workspace')} <ArrowRight size={17}/></Link></div><p className="hero-foot"><ShieldCheck size={16}/> {L('خدمات توضيحية · الإتاحة والشروط تُراجع قبل التنفيذ','Illustrative services · availability and terms confirmed before use')}</p></div>
+    <div className="hero-visual" style={{backgroundImage:`linear-gradient(180deg,transparent 42%,rgba(12,29,46,.72)),url(${qabsHero})`}} role="img" aria-label={L('مساحة استقبال عصرية بألوان كحلية وذهبية','Contemporary reception in navy and warm brass')}><div className="visual-note"><span className="goldline"/><div><small>{L('قبس للأعمال','QABS FOR BUSINESS')}</small><strong>{L('من الفكرة إلى الخطوة التالية','From idea to your next step')}</strong></div><ArrowUpRight size={19}/></div></div></section>
+    <section className="intro-strip"><div className="wrap strip-inner"><div><span>01</span><strong>{L('وضوح في كل خطوة','Clarity at every step')}</strong></div><div><span>02</span><strong>{L('خدمات في مكان واحد','Services in one place')}</strong></div><div><span>03</span><strong>{L('تجربة مصممة لأعمالك','A workspace for your business')}</strong></div></div></section>
+    <section className="section wrap" id="services"><div className="section-head"><div><div className="eyebrow"><span/> {L('ما نقدمه','WHAT WE DO')}</div><h2>{L('خدمات تواكب طموحك','Services for what comes next')}</h2></div><p>{L('استكشف المجالات التي يمكن أن تساعدك على التخطيط والانطلاق والنمو.','Explore the areas that can help you plan, launch and grow.')}</p></div><div className="service-grid">{services.map((s,i)=><Link key={s.id} to={'/services/'+s.id} className="service-card"><div className="card-top"><span className="icon-box"><s.icon size={22}/></span><span className="card-num">0{i+1}</span></div><small>{pick(s.tag,lang)}</small><h3>{pick(s.title,lang)}</h3><p>{pick(s.desc,lang)}</p><span className="card-link">{L('عرض التفاصيل','View details')} <ArrowUpRight size={16}/></span></Link>)}</div></section>
+    <section className="workspace-callout"><div className="wrap callout-inner"><div><div className="eyebrow pale"><span/> {L('بوابة قبس','THE QABS WORKSPACE')}</div><h2>{L('مساحة واحدة لرؤية أعمالك بوضوح.','One space for a clearer view of your business.')}</h2><p>{L('تعرّف على تجربة البوابة: الطلبات والمستندات والمتاجر والفواتير في واجهة واحدة.','Explore a workspace designed for requests, documents, stores and billing.')}</p><Link to="/workspace/overview" className="btn btn-gold">{L('استكشف الواجهة التجريبية','Explore the demo')} <ArrowUpRight size={17}/></Link></div><div className="callout-card"><div className="mock-head"><span className="mock-mark">Q</span><span>{L('مساحة العمل','WORKSPACE')}</span><span className="mock-tag">{L('تصور','PREVIEW')}</span></div><div className="mock-title">{L('نظرة عامة','Overview')}</div><div className="mock-row"><div><FileText size={19}/><span>{L('الطلبات','Requests')}</span></div><span>—</span></div><div className="mock-row"><div><Package size={19}/><span>{L('المستندات','Documents')}</span></div><span>—</span></div><div className="mock-row"><div><CreditCard size={19}/><span>{L('الفواتير','Billing')}</span></div><span>—</span></div><small>{L('بيانات توضيحية فقط','Illustrative only')}</small></div></div></section>
+    <section className="section wrap last-section"><div><div className="eyebrow"><span/> {L('خطوتك التالية','YOUR NEXT STEP')}</div><h2>{L('ابدأ بالسؤال الصحيح.','Start with the right question.')}</h2><p>{L('تعرّف على الخدمات والمتطلبات قبل اختيار ما يناسب أعمالك.','Explore the services and requirements before deciding what fits your business.')}</p></div><a className="btn btn-primary" href="#services" onClick={e=>{e.preventDefault();document.getElementById('services')?.scrollIntoView()}}>{L('عرض الخدمات','View services')} <ArrowUpRight size={18}/></a></section>
+   </>}
+   {service&&<section className="wrap inner-page"><div className="breadcrumb"><Link to="/">{L('الرئيسية','Home')}</Link><span>/</span><span>{pick(service.title,lang)}</span></div><div className="detail-grid"><div><div className="eyebrow"><span/> {pick(service.tag,lang)}</div><h1>{pick(service.title,lang)}</h1><p className="lead">{pick(service.desc,lang)}</p><div className="info-box"><strong>{L('حالة الخدمة','Service status')}</strong><p>{L('هذه صفحة تعريفية ضمن معاينة. الطلبات والتنفيذ الفعلي غير متاحين حالياً.','This is an informational preview. Requests and live fulfillment are not available yet.')}</p></div><Link className="btn btn-primary" to="/workspace/requests">{L('معاينة صفحة الطلبات','Preview requests')} <ArrowUpRight size={17}/></Link></div><div className="detail-aside"><span className="icon-box large"><service.icon size={28}/></span><h2>{L('ما الذي يمكنك مراجعته؟','What can you explore?')}</h2><ul><li><Check size={17}/>{L('نظرة على الخدمة ومتطلباتها','An overview of the service and requirements')}</li><li><Check size={17}/>{L('تصور واضح للخطوات التالية','A clearer view of next steps')}</li><li><Check size={17}/>{L('الرسوم والأهلية تُحدد قبل التنفيذ','Fees and eligibility confirmed before fulfillment')}</li></ul><p>{L('لا يوجد دفع أو تقديم فعلي من هذه المعاينة.','No payment or live submission is available from this preview.')}</p></div></div></section>}
+   {(route==='/login'||route==='/register'||route==='/recover')&&<section className="auth-area"><div className="auth-card"><div className="eyebrow"><span/> {L('بوابة قبس','QABS WORKSPACE')}</div><h1>{route==='/login'?L('أهلاً بعودتك','Welcome back'):route==='/register'?L('إنشاء حساب','Create an account'):L('استعادة كلمة المرور','Recover your password')}</h1><p>{L('واجهة تجريبية فقط. تسجيل الدخول والتسجيل واستعادة كلمة المرور غير مفعّلة بعد.','Interface preview only. Sign-in, registration and password recovery are not enabled yet.')}</p><form onSubmit={e=>e.preventDefault()} aria-label={L('نموذج غير مفعّل','Disabled form')}><label>{L('البريد الإلكتروني','Email address')}<input type="email" disabled placeholder={L('غير متاح في المعاينة','Unavailable in preview')}/></label>{route!=='/recover'&&<label>{L('كلمة المرور','Password')}<input type="password" disabled placeholder="••••••••"/></label>}<button className="btn btn-primary" type="button" disabled>{route==='/login'?L('تسجيل الدخول غير متاح','Sign-in unavailable'):route==='/register'?L('التسجيل غير متاح','Registration unavailable'):L('الاستعادة غير متاحة','Recovery unavailable')}</button></form><div className="auth-links"><Link to="/login">{L('تسجيل الدخول','Sign in')}</Link><Link to="/register">{L('إنشاء حساب','Create account')}</Link><Link to="/recover">{L('نسيت كلمة المرور؟','Forgot password?')}</Link></div><Link to="/workspace/overview" className="text-link">{L('أو استكشف البوابة التجريبية','Or explore the demo workspace')} <ArrowUpRight size={15}/></Link></div></section>}
+   {(tab||route==='/workspace/admin')&&<section className="workspace wrap"><aside className="side"><div className="side-title">{L('مساحة العمل','WORKSPACE')} <span>{L('تجريبي','DEMO')}</span></div><nav aria-label={L('أقسام مساحة العمل','Workspace navigation')}>{tabs.map(t=><Link key={t.id} to={'/workspace/'+t.id} className={'side-link '+(tab?.id===t.id?'active':'')}><t.icon size={18}/><span>{pick(t.label,lang)}</span></Link>)}</nav><div className="side-bottom"><CircleHelp size={17}/>{L('تجربة مرئية دون بيانات فعلية','Visual demo without live data')}</div><Link to="/workspace/admin" className="side-demo-link">{L('تصور لوحة الإدارة (للعرض فقط)','Admin design preview (view only)')}</Link></aside><div className="workspace-main"><div className="workspace-top"><div><div className="eyebrow"><span/> {L('مساحة عمل تجريبية','DEMO WORKSPACE')}</div><h1>{route==='/workspace/admin'?L('تصور لوحة الإدارة','Admin workspace preview'):pick(tab!.label,lang)}</h1><p>{L('استكشف التصميم باستخدام بيانات توضيحية فقط.','Explore the design using illustrative data only.')}</p></div><span className="status"><LockKeyhole size={15}/> {L('غير متصل','Not connected')}</span></div><div className="demo-notice"><LockKeyhole size={18}/><span>{L('لا توجد جلسة حقيقية أو بيانات عملاء هنا. العمليات والحفظ والدفع معطّلة.','There is no live session or customer data here. Operations, saving and payments are disabled.')}</span></div>
+   {tab?.id==='overview'?<><div className="summary-grid">{[{icon:FileText,title:L('الطلبات','Requests')},{icon:ShoppingBag,title:L('المتاجر','Stores')},{icon:CreditCard,title:L('الفواتير','Invoices')}].map(c=><div className="summary-card" key={c.title}><c.icon size={20}/><span>{c.title}</span><strong>—</strong><small>{L('بيانات غير متصلة','Not connected')}</small></div>)}</div><div className="workspace-panel"><div><div className="panel-heading"><div><h2>{L('ابدأ من هنا','Start here')}</h2><p>{L('تعرّف على مكونات مساحة العمل قبل تفعيلها.','Explore the workspace before it is enabled.')}</p></div></div><div className="quick-grid"><Link to="/workspace/requests"><FileText size={19}/>{L('عرض الطلبات','View requests')}<ArrowUpRight size={16}/></Link><Link to="/workspace/documents"><Package size={19}/>{L('المستندات','Documents')}<ArrowUpRight size={16}/></Link><Link to="/workspace/billing"><CreditCard size={19}/>{L('الفواتير','Billing')}<ArrowUpRight size={16}/></Link></div></div></div></>:<div className="workspace-panel empty"><div className="empty-icon">{tab?<tab.icon size={26}/>:<ShieldCheck size={26}/>}</div><h2>{route==='/workspace/admin'?L('واجهة الإدارة للتصميم فقط','Admin interface design only'):L('هذه المساحة قيد الإعداد','This area is being prepared')}</h2><p>{tab?.id==='crypto'?L('عرض ومتابعة فقط. التداول والتحويلات الحقيقية غير مفعّلة في هذه الواجهة.','Display and tracking only. Real trading and transfers are not enabled in this interface.'):L('ستظهر المعلومات والوظائف هنا بعد اكتمال الربط والتحقق من الصلاحيات. لا توجد بيانات فعلية للعرض.','Information and features will appear after integration and authorization are verified. No live data is displayed.')}</p>{tab?.id==='requests'&&<Link className="btn btn-outline" to="/services/formation">{L('اطّلع على خدمات التأسيس','Explore formation services')} <ArrowUpRight size={16}/></Link>}{tab?.id==='requests'&&<form className="demo-form" onSubmit={e=>e.preventDefault()}><h3>{L('تصور نموذج طلب','Request form preview')}</h3><label>{L('نوع الخدمة','Service type')}<select disabled><option>{L('اختر الخدمة بعد التفعيل','Choose a service when enabled')}</option></select></label><label>{L('تفاصيل الطلب','Request details')}<input disabled placeholder={L('الإدخال غير مفعّل','Input is disabled')}/></label><button type="button" className="btn btn-primary" disabled>{L('إرسال الطلب غير متاح','Submission unavailable')}</button></form>}{route==='/workspace/admin'&&<><p className="admin-note">{L('لا توجد أدوات إدارية أو صلاحيات فعلية في هذه المعاينة العامة.','There are no real admin tools or privileges in this public preview.')}</p><div className="admin-preview-grid">{[L('طلبات قيد المراجعة','Requests to review'),L('العملاء','Customers'),L('تذاكر الدعم','Support tickets')].map(x=><div key={x}><span>{x}</span><strong>—</strong></div>)}</div><div className="demo-table"><strong>{L('قائمة المتابعة','Review queue')}</strong><p>{L('لا توجد بيانات فعلية. أدوات المراجعة غير مفعّلة.','No live data. Review tools are not enabled.')}</p></div></>}</div>}
+   <p className="workspace-foot">{L('ملاحظة: المعاينة لا تمثل جاهزية أي خدمة تشغيلية.','Note: this preview does not establish operational readiness.')}</p></div></section>}
+   {!known&&<section className="wrap inner-page"><h1>{L('الصفحة غير موجودة','Page not found')}</h1><p>{L('تحقق من الرابط أو عد إلى الصفحة الرئيسية.','Check the link or return home.')}</p><Link to="/" className="btn btn-primary">{L('الصفحة الرئيسية','Back home')}</Link></section>}
+  </main>
+  <footer className="footer"><div className="wrap footer-grid"><div><Link to="/" className="footer-logo"><img src={qabsLogo} alt="QABS | قبس"/></Link><p>{L('أفكارك تستحق مساحة أوضح للنمو.','A clearer space for your ambitions to grow.')}</p></div><div><strong>{L('استكشف','Explore')}</strong><Link to="/services/formation">{L('تأسيس الشركات','Company formation')}</Link><Link to="/services/stores">{L('المتاجر الإلكترونية','Online stores')}</Link><Link to="/workspace/overview">{L('معاينة البوابة','Workspace preview')}</Link></div><div><strong>{L('معلومات مهمة','Important information')}</strong><p>{L('الرسوم الحكومية والخدمات الإضافية منفصلة، وتخضع أهلية الدفع لموافقة المزود.','Government and additional service fees are separate. Payment eligibility is subject to provider approval.')}</p></div></div><div className="wrap footer-bottom"><span>© 2026 QABS | قبس</span><span>{L('معاينة تجريبية','Preview experience')}</span></div></footer>
+ </div>
 }
+export default App;

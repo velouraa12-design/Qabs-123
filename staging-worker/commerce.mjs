@@ -1,7 +1,9 @@
 import { currentUser } from './auth.mjs';
 import { audit, ensureSchema, tenantFor } from './platform.mjs';
+import { CREDIT_SCHEMA, consumeCredits } from './credits.mjs';
 
 const SCHEMA = [
+  CREDIT_SCHEMA,
   "CREATE TABLE IF NOT EXISTS staging_documents (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL REFERENCES staging_tenants(id) ON DELETE CASCADE, owner_id TEXT NOT NULL REFERENCES staging_users(id) ON DELETE RESTRICT, object_key TEXT NOT NULL UNIQUE, filename TEXT NOT NULL, content_type TEXT NOT NULL, size_bytes INTEGER NOT NULL, created_at TEXT NOT NULL)",
   "CREATE INDEX IF NOT EXISTS idx_staging_documents_tenant_created ON staging_documents(tenant_id, created_at DESC)",
   "CREATE TABLE IF NOT EXISTS staging_stores (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL REFERENCES staging_tenants(id) ON DELETE CASCADE, name TEXT NOT NULL, slug TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'draft', created_at TEXT NOT NULL, UNIQUE (tenant_id, slug))",
@@ -167,29 +169,18 @@ export async function commerceRoute(request, env, url) {
       if (!credits) await env.DB.prepare('INSERT OR IGNORE INTO staging_credits (tenant_id, balance_units, updated_at) VALUES (?1, 1000, ?2)').bind(tenantId, now()).run();
       return json(await billingSummary(env.DB, tenantId));
     }
-    const consumeMatch = url.pathname === base + '/billing/credits/consume';
-    if (request.method === 'POST' && consumeMatch) {
-      const input = await body(request); const units = Number(input?.units); const reason = text(input?.reason, 160) || 'usage';
-      if (!Number.isInteger(units) || units < 1 || units > 100000) return json({ error: 'INVALID_UNITS' }, 400);
-      const current = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
-      if (!current) return json({ error: 'CREDITS_NOT_INITIALIZED' }, 409);
-      if (current.balance_units < units) return json({ error: 'INSUFFICIENT_CREDITS', balanceUnits: current.balance_units }, 402);
-      const updatedAt = now(); await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, updatedAt, tenantId).run();
-      await audit(env.DB, tenantId, user.id, 'credits.consumed', 'credits', tenantId, { units, reason });
-      const result = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
-      return json({ consumedUnits: units, balanceUnits: result.balance_units });
-    }
-    if (request.method === 'POST' && url.pathname === base + '/ai/usage') {
-      const input = await body(request); const units = Number(input?.units); const model = text(input?.model, 80) || 'qabs-ai-staging';
-      if (!Number.isInteger(units) || units < 1 || units > 100000) return json({ error: 'INVALID_UNITS' }, 400);
-      const current = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
-      if (!current) return json({ error: 'CREDITS_NOT_INITIALIZED' }, 409);
-      if (current.balance_units < units) return json({ error: 'INSUFFICIENT_CREDITS', balanceUnits: current.balance_units }, 402);
-      const timestamp = now(); await env.DB.prepare('UPDATE staging_credits SET balance_units = balance_units - ?1, updated_at = ?2 WHERE tenant_id = ?3 AND balance_units >= ?1').bind(units, timestamp, tenantId).run();
-      const usageId = id('aiu'); await env.DB.prepare('INSERT INTO staging_ai_usage (id, tenant_id, user_id, model, units, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)').bind(usageId, tenantId, user.id, model, units, timestamp).run();
-      await audit(env.DB, tenantId, user.id, 'ai.usage.recorded', 'ai_usage', usageId, { units, model });
-      const result = await env.DB.prepare('SELECT balance_units FROM staging_credits WHERE tenant_id = ?1').bind(tenantId).first();
-      return json({ usage: { id: usageId, model, units, createdAt: timestamp }, balanceUnits: result.balance_units }, 201);
+    const creditOperation = url.pathname === base + '/billing/credits/consume';
+    const aiOperation = url.pathname === base + '/ai/usage';
+    if (request.method === 'POST' && (creditOperation || aiOperation)) {
+      const input = await body(request);
+      const kind = aiOperation ? 'ai' : 'credit';
+      const detail = aiOperation ? (text(input?.model, 80) || 'qabs-ai-staging') : (text(input?.reason, 160) || 'usage');
+      const outcome = await consumeCredits(env.DB, {
+        tenantId, userId: user.id, requestKey: request.headers.get('Idempotency-Key'), kind,
+        units: Number(input?.units), detail, operationId: id(aiOperation ? 'aiu' : 'credit'),
+        auditId: id('aud'), timestamp: now()
+      });
+      return json(outcome.body, outcome.status);
     }
 
     if (request.method === 'GET' && url.pathname === base + '/admin/summary') {

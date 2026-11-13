@@ -184,15 +184,17 @@ export const stagingCommerceApi = {
   billingSummary() {
     return request<StagingBillingSummary>('/api/platform/billing/summary');
   },
-  consumeCredits(units: number, reason: string) {
+  consumeCredits(units: number, reason: string, idempotencyKey: string) {
     return request<{ consumedUnits: number; balanceUnits: number }>('/api/platform/billing/credits/consume', {
       method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify({ units, reason })
     });
   },
-  recordAiUsage(units: number, model = 'qabs-ai-staging') {
+  recordAiUsage(units: number, model: string, idempotencyKey: string) {
     return request<{ usage: { id: string; model: string; units: number; createdAt: string }; balanceUnits: number }>('/api/platform/ai/usage', {
       method: 'POST',
+      headers: { 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify({ units, model })
     });
   },

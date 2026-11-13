@@ -147,8 +147,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (localStorage.getItem('qabs_theme_v2') as 'dark' | 'light') || 'light';
   });
 
-  const [mode, setMode] = useState<AppMode>('landing');
-  const [user, setUser] = useState<UserProfile>(INITIAL_USER);
+  const [mode, setModeState] = useState<AppMode>('landing');
+  const [user, setUser] = useState<UserProfile>({ ...INITIAL_USER, id: 'guest', name: 'Guest', email: '', role: 'merchant', credits: 0 });
   const [companies, setCompanies] = useState<CompanyFormation[]>(INITIAL_COMPANIES);
   const [stores, setStores] = useState<StoreInstance[]>(INITIAL_STORES);
   const [activeStoreId, setActiveStoreId] = useState<string>(INITIAL_STORES[0]?.id || 'store_01');
@@ -208,6 +208,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTimeout(() => {
       setToastMessage(null);
     }, 3500);
+  };
+
+  // Fail closed until real session, role, and end-to-end integration are verified.
+  const setMode = (next: AppMode) => {
+    if (next !== 'landing') {
+      showToast(language === 'ar' ? 'هذه الخدمة غير متاحة في المعاينة الحالية.' : 'This service is unavailable in the current preview.');
+      return;
+    }
+    setModeState(next);
   };
 
   const refreshPlatformRequests = async () => {

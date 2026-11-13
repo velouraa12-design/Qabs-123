@@ -6,7 +6,7 @@ import { Phone, Globe } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const { language, setMode } = useApp();
-  const { siteContent, setEditorOpen } = useCustomizer();
+  const { siteContent } = useCustomizer();
   const isAr = language === 'ar';
 
   return (
@@ -37,19 +37,6 @@ export const Footer: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <span className="font-extrabold text-[#003445] dark:text-white block">{isAr ? 'الحوكمة والمطورين' : 'Governance'}</span>
-              <button onClick={() => setMode('admin')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'لوحة Super Admin' : 'Super Admin'}
-              </button>
-              <button onClick={() => setMode('billing')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'الاشتراكات والفوترة' : 'Billing & Plans'}
-              </button>
-              <button onClick={() => setMode('template_hub')} className="block hover:text-[#00A896] cursor-pointer">
-                {isAr ? 'مستودع GitHub Template' : 'GitHub Template'}
-              </button>
-            </div>
-
-            <div className="space-y-2">
               <span className="font-extrabold text-[#003445] dark:text-white block">{isAr ? 'التواصل الرسمي' : 'Official Channels'}</span>
               <a
                 href={`https://wa.me/${siteContent.whatsappNumber.replace(/[^0-9]/g, '')}`}
@@ -64,12 +51,6 @@ export const Footer: React.FC = () => {
                 <Globe className="w-3.5 h-3.5 text-[#C8A24A]" />
                 <span className="font-mono">{siteContent.storeDomain}</span>
               </div>
-              <button
-                onClick={() => setEditorOpen(true)}
-                className="text-[11px] font-bold text-[#007F8B] dark:text-[#D4AF37] hover:underline flex items-center gap-1 cursor-pointer pt-1"
-              >
-                <span>✏️ {isAr ? 'تخصيص محتوى القالب' : 'Live Content Customizer'}</span>
-              </button>
             </div>
           </div>
         </div>
