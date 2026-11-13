@@ -124,6 +124,7 @@ test('partnership application submission, privacy, admin review and audit trail'
   const queue = await h.call('/api/platform/admin/partnership-applications', { cookie: admin.cookie });
   assert.equal(queue.status, 200);
   assert.equal(queue.data.applications.length, 1);
+  assert.equal(queue.data.applications[0].adminNote, '');
 
   const id = submitted.data.application.id;
   const decision = await h.call('/api/platform/admin/partnership-applications/' + id + '/status', {
@@ -134,7 +135,7 @@ test('partnership application submission, privacy, admin review and audit trail'
   assert.equal(decision.status, 200);
   const updated = await h.call('/api/platform/partnership-applications', { cookie: user.cookie });
   assert.equal(updated.data.applications[0].status, 'needs_information');
-  assert.equal(updated.data.applications[0].adminNote, 'يرجى استكمال تفاصيل نطاق التعاون.');
+  assert.equal(Object.hasOwn(updated.data.applications[0], 'adminNote'), false);
 
   const approved = await h.call('/api/platform/admin/partnership-applications/' + id + '/status', {
     method: 'POST', cookie: admin.cookie, body: { status: 'approved', admin_note: 'Approved in synthetic test.' }
