@@ -31,6 +31,9 @@ jobs:
     - name: Build Application Bundle
       run: npm run build
 
+    - name: Test public preview isolation and asset hashes
+      run: node --test tests/preview-worker.test.mjs
+
     - name: Security & Secret Scan
       run: |
         echo "Running limited pattern scan..."
