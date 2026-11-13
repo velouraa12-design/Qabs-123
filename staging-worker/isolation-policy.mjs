@@ -12,6 +12,7 @@ function isObject(value) { return value !== null && typeof value === 'object' &&
 
 export function validateIsolatedWorkerConfig(config, approved) {
   if (!isObject(config) || !isObject(approved)) block('config and approved resource inventory are required');
+  for (const key of ['workerName', 'd1Id', 'd1Name', 'r2Bucket']) if (typeof approved[key] !== 'string' || !approved[key].trim()) block('approved resource inventory is incomplete');
   if (config.name !== approved.workerName) block('worker name mismatch');
   for (const key of ['routes', 'custom_domains', 'customDomains']) {
     if (key in config && (!Array.isArray(config[key]) || config[key].length !== 0)) block('routes and custom domains are prohibited for preparation worker');
@@ -21,6 +22,7 @@ export function validateIsolatedWorkerConfig(config, approved) {
   const bindings = config.bindings ?? {};
   if (!isObject(bindings)) block('bindings must be an object');
   for (const key of Object.keys(bindings)) {
+    if (FORBIDDEN_BINDING_KEYS.has(key)) block(`forbidden binding category: ${key}`);
     if (SECRET_KEY.test(key)) block(`secret-like binding name: ${key}`);
     if (!['D1', 'R2'].includes(key)) block(`unapproved binding: ${key}`);
   }
@@ -37,7 +39,7 @@ export function validateOutboundUrl(input, allowedOrigins = []) {
   if (url.protocol !== 'https:') block('only HTTPS outbound destinations are allowed');
   if (url.username || url.password) block('URL credentials are prohibited');
   if (url.port && !['443'].includes(url.port)) block('non-standard outbound ports are prohibited');
-  const host = url.hostname.toLowerCase();
+  const host = url.hostname.toLowerCase().replace(/\.$/, '');
   if (FORBIDDEN_HOSTS.has(host) || host.endsWith('.qabs1.store')) block('QABS production/preview host is forbidden');
   if (!allowedOrigins.includes(url.origin)) block('outbound origin is not on the explicit allowlist');
   return true;
@@ -46,10 +48,38 @@ export function validateOutboundUrl(input, allowedOrigins = []) {
 export function validateEnvironmentInventory(inventory) {
   if (!isObject(inventory)) block('environment inventory is required');
   if (inventory.environment !== 'staging') block('environment must be staging');
-  if (inventory.serviceBindings?.length) block('service bindings must be empty');
+  for (const key of ['serviceBindings', 'routes', 'customDomains', 'crons']) if (!Array.isArray(inventory[key])) block(`${key} inventory must be an explicit array`);
+  if (inventory.serviceBindings.length) block('service bindings must be empty');
   if (inventory.routes?.length || inventory.customDomains?.length) block('routes and custom domains must be empty');
   if (inventory.crons?.length) block('cron triggers must be empty');
   if (inventory.productionSecretsPresent !== false) block('production secret separation is not proven');
   if (inventory.dataClassification !== 'synthetic-only') block('data must be classified synthetic-only');
   return true;
+}
+
+// Validates the JSON shape passed to Wrangler; this is a preflight, not an
+// independent proof of remote bindings or of the truth of the inventory.
+export function validateWranglerStagingManifest(config, approved, inventory) {
+  validateEnvironmentInventory(inventory);
+  if (!isObject(approved)) block('approved resource inventory is required');
+  if (!isObject(config) || !isObject(config.env) || !isObject(config.env.staging)) block('Wrangler env.staging is required');
+  const onlyKeys = (obj, allowed, where) => {
+    if (!isObject(obj)) block(`${where} must be an object`);
+    for (const key of Object.keys(obj)) if (!allowed.includes(key)) block(`unapproved ${where} key: ${key}`);
+  };
+  onlyKeys(config, ['name', 'main', 'compatibility_date', 'workers_dev', 'env'], 'Wrangler root');
+  if (config.main !== './entrypoint.mjs' || config.workers_dev !== true || !/^\d{4}-\d{2}-\d{2}$/.test(config.compatibility_date || '')) block('invalid Wrangler entrypoint or preview configuration');
+  if (Object.keys(config.env).length !== 1) block('only staging environment is allowed');
+  const s = config.env.staging;
+  onlyKeys(s, ['name', 'vars', 'd1_databases', 'r2_buckets'], 'Wrangler staging');
+  if (config.name !== approved.workerName || s.name !== approved.workerName) block('worker name mismatch');
+  if (!Array.isArray(s.d1_databases) || s.d1_databases.length !== 1 || !Array.isArray(s.r2_buckets) || s.r2_buckets.length !== 1) block('exactly one D1 and R2 are required');
+  let d = s.d1_databases[0], r = s.r2_buckets[0];
+  onlyKeys(d, ['binding', 'database_id', 'database_name'], 'D1');
+  onlyKeys(r, ['binding', 'bucket_name'], 'R2');
+  onlyKeys(s.vars, ['QABS_STAGING_ENV', 'QABS_STAGING_D1_UUID', 'QABS_STAGING_D1_NAME', 'QABS_STAGING_R2_BUCKET'], 'vars');
+  if (d.binding !== 'DB' || r.binding !== 'ARTIFACTS') block('binding names mismatch');
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(d.database_id || '')) block('D1 UUID is invalid');
+  if (s.vars.QABS_STAGING_ENV !== 'staging' || s.vars.QABS_STAGING_D1_UUID !== d.database_id || s.vars.QABS_STAGING_D1_NAME !== d.database_name || s.vars.QABS_STAGING_R2_BUCKET !== r.bucket_name) block('runtime inventory does not match bindings');
+  return validateIsolatedWorkerConfig({name:s.name,bindings:{D1:{id:d.database_id,name:d.database_name},R2:{bucket:r.bucket_name}}},approved);
 }

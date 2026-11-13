@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "test:e2e:staging": "node scripts/staging-e2e.mjs",
     "test:credits": "node --test tests/credits.test.mjs",
-    "test:backend": "node --test tests/staging-isolation.integration.test.mjs tests/staging-workerd.integration.test.mjs tests/staging-isolation-policy.test.mjs"
+    "test:backend": "node --test tests/staging-isolation.integration.test.mjs tests/staging-workerd.integration.test.mjs tests/staging-isolation-policy.test.mjs tests/staging-wrangler-policy.test.mjs",
+    "validate:staging-manifest": "node scripts/validate-isolation-manifest.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

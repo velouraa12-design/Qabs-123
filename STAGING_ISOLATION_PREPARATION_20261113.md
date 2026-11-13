@@ -56,3 +56,10 @@ The current `manifest-guard.mjs` hard-codes the existing isolated D1 UUID/name a
 
 ## Safety boundary
 No deploy, resource creation, D1 export/restore, data migration, binding/route/DNS change, secret read/write, Shopify change, payment operation, PR merge, or production modification is authorized by this branch.
+
+## Follow-up: local preflight and workerd tests, 2026-11-13
+The local Wrangler JSON preflight can be run as `npm run validate:staging-manifest -- <wrangler.json> <approved-inventory.json>`. The second JSON must contain `approved` resource identifiers and `environment` inventory. It checks an explicit allowlist and fails on service bindings, unknown keys, missing inventory and unapproved targets. A passing result is not evidence that a supplied inventory is true, that a remote resource is synthetic-only, or that runtime egress is restricted. It is not connected to a deployment pipeline; do not deploy on its result alone. `workers_dev` is not private by default; access controls require independent verification.
+
+The legacy manifest guard also invokes policy validation, but remains pinned to the existing legacy targets. These are not approved here for deployment or testing. Local workerd tests now cover synthetic draft-store/product/order tenant boundaries as well as the existing auth, document and credit scenarios. Tests run only in local emulators; no remote data, payment, email or AI integration is exercised. The order endpoint only records a test order and reports payment disabled.
+
+Before any deployment, obtain an independently verified inventory, prove remote isolation and synthetic classification, settle cost and backup/restore authorization, connect preflight and runtime egress controls to a reviewed deployment path, and pass remote end-to-end acceptance. No production-critical resource may be modified as part of preparation.

@@ -62,6 +62,24 @@ test('isolated workerd D1/R2: auth, roles, tenant boundaries, requests, files an
     let form=new FormData();form.append('file',new Blob(['synthetic document'],{type:'text/plain'}),'test.txt');let encoded=new Request('https://synthetic.invalid/',{method:'POST',body:form});let up=await call('/api/platform/documents',{method:'POST',cookie:A,body:new Uint8Array(await encoded.arrayBuffer()),headers:{'content-type':encoded.headers.get('content-type')},rawBody:true});assert.equal(up.status,201);
     let p='/api/platform/documents/'+up.data.document.id,own=await call(p,{cookie:A});assert.equal(own.status,200);assert.equal(own.data,'synthetic document');assert.equal(own.headers.get('x-content-type-options'),'nosniff');assert.equal((await call(p,{cookie:B})).status,404);assert.equal((await call(p)).status,401);
   });
+  await t.test('draft store, product and mock order remain tenant scoped',async()=>{
+    const created=await call('/api/platform/stores',{method:'POST',cookie:A,body:{name:'Synthetic A store',slug:'synthetic-store-a'}});
+    assert.equal(created.status,201);assert.equal(created.data.store.status,'draft');
+    const path='/api/platform/stores/'+created.data.store.id;
+    assert.equal((await call(path,{cookie:B})).status,404);
+    const product=await call(path+'/products',{method:'POST',cookie:A,body:{name:'Synthetic product',sku:'test-sku',price_cents:1234,stock:5}});
+    assert.equal(product.status,201);
+    const order=await call(path+'/orders',{method:'POST',cookie:A,body:{total_cents:1234,currency:'USD',customer_email:'order@example.test',payload:{synthetic:true}}});
+    assert.equal(order.status,201);assert.equal(order.data.paymentEnabled,false);assert.equal(order.data.order.status,'pending');
+    assert.equal((await call(path+'/products',{cookie:A})).data.products.length,1);
+    assert.equal((await call(path+'/orders',{cookie:A})).data.orders.length,1);
+    for(const collection of ['products','orders']) {
+      assert.equal((await call(path+'/'+collection,{cookie:B})).status,404);
+      assert.equal((await call(path+'/'+collection,{method:'POST',cookie:B,body:{name:'unauthorized'}})).status,404);
+      assert.equal((await call(path+'/'+collection)).status,401);
+    }
+    assert.equal((await call('/api/platform/stores',{cookie:B})).data.stores.length,0);
+  });
   await t.test('credits replay, conflict and concurrent insufficient balance',async()=>{
     let initial=await call('/api/platform/billing/summary',{cookie:A});assert.equal(initial.status,200);assert.equal(initial.data.credits.balanceUnits,1000);
     const charge=(key,units)=>call('/api/platform/ai/usage',{method:'POST',cookie:A,headers:{'Idempotency-Key':key},body:{units,model:'synthetic-model'}});
