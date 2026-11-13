@@ -24,7 +24,7 @@ function harness() {
         const output = [];
         for (const item of items) {
           const query = sql.prepare(item.query);
-          if (/^\\s*SELECT/i.test(item.query)) output.push({ success: true, results: query.all(...item.args) });
+          if (/^\s*SELECT/i.test(item.query)) output.push({ success: true, results: query.all(...item.args) });
           else {
             const result = query.run(...item.args);
             output.push({ success: true, meta: { changes: Number(result.changes) } });
