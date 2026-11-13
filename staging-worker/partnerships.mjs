@@ -66,7 +66,7 @@ function applicantFrom(input) {
   if (applicant.website && !/^https?:\/\//i.test(applicant.website)) return null;
   return applicant;
 }
-function publicApplication(row) {
+function publicApplication(row, includeAdmin = false) {
   let applicant = {};
   try { applicant = JSON.parse(row.applicant_json); } catch { applicant = {}; }
   return {
@@ -75,7 +75,7 @@ function publicApplication(row) {
     partnershipType: row.partnership_type,
     applicant,
     status: row.status,
-    adminNote: row.admin_note || '',
+    ...(includeAdmin ? { adminNote: row.admin_note || '' } : {}),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -100,7 +100,7 @@ function applicantPage(user, applications) {
 }
 function adminPage(applications) {
   const rows = applications.map(row => {
-    const app = publicApplication(row);
+    const app = publicApplication(row, true);
     return `<article class="card" data-id="${escapeHtml(app.id)}"><div class="row"><strong>${escapeHtml(app.applicant.full_name)} — ${escapeHtml(app.partnershipType)}</strong><span class="badge">${statusLabel(app.status)}</span></div><p class="muted">${escapeHtml(app.applicant.email)} · ${escapeHtml(app.applicant.phone)} · ${escapeHtml(app.applicant.country)}</p><p>${escapeHtml(app.applicant.proposal)}</p><label>حالة الطلب<select class="status"><option value="under_review" ${app.status==='under_review'?'selected':''}>قيد المراجعة</option><option value="needs_information" ${app.status==='needs_information'?'selected':''}>بانتظار استكمال البيانات</option><option value="approved" ${app.status==='approved'?'selected':''}>مقبول</option><option value="rejected" ${app.status==='rejected'?'selected':''}>مرفوض</option></select></label><label>ملاحظة الإدارة<textarea class="admin-note">${escapeHtml(app.adminNote)}</textarea></label><button class="save" type="button">حفظ القرار</button><p class="notice" role="status" aria-live="polite"></p></article>`;
   }).join('') || '<p class="muted">لا توجد طلبات حتى الآن.</p>';
   const body = `<header class="top"><div class="brand">QABS | إدارة طلبات الشراكة</div><a href="/workspace">مساحة العمل</a></header><main class="wrap"><section class="hero"><div class="eyebrow">SUPER ADMIN</div><h1>إدارة طلبات الشراكة</h1><p>هذه الصفحة متاحة لدور Super Admin فقط. كل قرار يسجل في سجل التدقيق.</p></section><section class="panel"><div id="applications">${rows}</div></section></main>`;
