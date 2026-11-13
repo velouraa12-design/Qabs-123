@@ -7,6 +7,7 @@ import {
 } from './auth.mjs';
 import { platformRoute } from './platform.mjs';
 import { commerceRoute } from './commerce.mjs';
+import { partnershipsRoute } from './partnerships.mjs';
 import {
   EXPECTED_D1_NAME,
   EXPECTED_D1_UUID,
@@ -89,6 +90,8 @@ const worker = {
       }
     }
     if (request.method === 'GET' && (url.pathname === '/control-center/' || url.pathname === '/control-center')) return html(pageShell('مركز تحكم قبس', `<header class="top"><div class="brand"><span class="mark">Q</span><span>مركز تحكم قبس</span></div><a href="/">بوابة Staging</a></header><main class="wrap"><section class="card"><div class="eyebrow">PUBLIC STAGING PREVIEW</div><span class="badge">معاينة عامة — بدون تسجيل دخول</span><h1 style="color:#081b36">مركز التحكم</h1><p>هذه واجهة معاينة عامة للـStaging فقط. لا توجد عمليات إدارية أو بيانات عملاء متصلة، ولا يُسمح باستخدامها للإنتاج.</p><div class="links"><a href="/health">Health</a><a href="/recovered-formation/studio/formation">تأسيس الشركات</a></div></section></main>`));
+    const partnershipResult = await partnershipsRoute(request, env, url);
+    if (partnershipResult) return partnershipResult;
     const commerceResult = await commerceRoute(request, env, url);
     if (commerceResult) return commerceResult;
     const platformResult = await platformRoute(request, env, url);
