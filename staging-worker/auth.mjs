@@ -43,7 +43,15 @@ export function validateCredentials(email, password) {
 }
 
 export function parseCookies(header = '') {
-  return Object.fromEntries(header.split(';').map(part => part.trim().split('=')) .filter(([key, value]) => key && value).map(([key, ...rest]) => [key, decodeURIComponent(rest.join('='))]));
+  const cookies = {};
+  for (const part of header.split(';')) {
+    const separator = part.indexOf('=');
+    if (separator < 1) continue;
+    const key = part.slice(0, separator).trim();
+    try { cookies[key] = decodeURIComponent(part.slice(separator + 1).trim()); }
+    catch { /* Reject malformed cookies instead of failing the request. */ }
+  }
+  return cookies;
 }
 
 export function sessionCookie(token, maxAge = SESSION_TTL_SECONDS) {
@@ -65,7 +73,10 @@ export async function verifyPassword(password, stored) {
   const [algorithm, iterations, saltText, digestText] = String(stored).split('$');
   if (algorithm !== 'pbkdf2' || iterations !== String(PASSWORD_ITERATIONS) || !saltText || !digestText) return false;
   const candidate = await hashPassword(password, base64UrlToBytes(saltText));
-  return candidate === stored;
+  if (candidate.length !== stored.length) return false;
+  let difference = 0;
+  for (let i = 0; i < candidate.length; i++) difference |= candidate.charCodeAt(i) ^ stored.charCodeAt(i);
+  return difference === 0;
 }
 
 function randomId(prefix) {
@@ -89,7 +100,12 @@ export async function signUp(db, email, password) {
   if (existing) return { status: 409, body: { error: 'ACCOUNT_EXISTS' } };
   const user = { id: randomId('usr'), email: checked.email, role: 'customer', createdAt: new Date().toISOString() };
   const passwordHash = await hashPassword(password);
-  await db.prepare('INSERT INTO staging_users (id, email, password_hash, role, created_at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(user.id, user.email, passwordHash, user.role, user.createdAt).run();
+  try {
+    await db.prepare('INSERT INTO staging_users (id, email, password_hash, role, created_at) VALUES (?1, ?2, ?3, ?4, ?5)').bind(user.id, user.email, passwordHash, user.role, user.createdAt).run();
+  } catch (error) {
+    if (String(error?.message || error).toLowerCase().includes('unique')) return { status: 409, body: { error: 'ACCOUNT_EXISTS' } };
+    throw error;
+  }
   return createSession(db, user);
 }
 
@@ -98,7 +114,12 @@ export async function logIn(db, email, password) {
   if (!checked.ok) return { status: 401, body: { error: 'INVALID_CREDENTIALS' } };
   await ensureSchema(db);
   const row = await db.prepare('SELECT id, email, password_hash, role FROM staging_users WHERE email = ?1').bind(checked.email).first();
-  if (!row || !(await verifyPassword(password, row.password_hash))) return { status: 401, body: { error: 'INVALID_CREDENTIALS' } };
+  // Do comparable password-derivation work when the account does not exist.
+  if (!row) {
+    await hashPassword(password, new Uint8Array(16));
+    return { status: 401, body: { error: 'INVALID_CREDENTIALS' } };
+  }
+  if (!(await verifyPassword(password, row.password_hash))) return { status: 401, body: { error: 'INVALID_CREDENTIALS' } };
   return createSession(db, row);
 }
 

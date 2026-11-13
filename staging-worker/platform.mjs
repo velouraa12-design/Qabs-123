@@ -41,12 +41,15 @@ export async function tenantFor(db, user) {
     const tenantId = id('ten');
     const createdAt = now();
     try {
-      await db.prepare("INSERT INTO staging_tenants (id, name, created_at) VALUES (?1, ?2, ?3)").bind(tenantId, 'QABS Staging Workspace', createdAt).run();
-      await db.prepare("INSERT INTO staging_tenant_members (tenant_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)").bind(tenantId, user.id, 'owner', createdAt).run();
+      // Both inserts must commit together. A membership conflict rolls back the
+      // new tenant rather than requiring a potentially unsafe cleanup DELETE.
+      await db.batch([
+        db.prepare("INSERT INTO staging_tenants (id, name, created_at) VALUES (?1, ?2, ?3)").bind(tenantId, 'QABS Staging Workspace', createdAt),
+        db.prepare("INSERT INTO staging_tenant_members (tenant_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)").bind(tenantId, user.id, 'owner', createdAt)
+      ]);
     } catch (error) {
       const message = String(error && error.message || error).toLowerCase();
       if (!message.includes('unique')) throw error;
-      await db.prepare("DELETE FROM staging_tenants WHERE id = ?1 AND NOT EXISTS (SELECT 1 FROM staging_tenant_members WHERE tenant_id = ?1)").bind(tenantId).run();
     }
     membership = await db.prepare("SELECT m.tenant_id, m.role, t.name FROM staging_tenant_members m JOIN staging_tenants t ON t.id = m.tenant_id WHERE m.user_id = ?1").bind(user.id).first();
   }
@@ -67,9 +70,9 @@ export async function platformRoute(request, env, url) {
   if (!sameOrigin(request)) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
   if (!env.DB) return json({ error: 'DATABASE_UNAVAILABLE' }, 503);
   try {
-    await ensureSchema(env.DB);
     const user = await currentUser(env.DB, request);
     if (!user) return json({ error: 'AUTH_REQUIRED' }, 401);
+    await ensureSchema(env.DB);
     const membership = await tenantFor(env.DB, user);
     if (!membership) return json({ error: 'TENANT_UNAVAILABLE' }, 503);
     const base = '/api/platform';
@@ -90,14 +93,18 @@ export async function platformRoute(request, env, url) {
       if (!kind || !validAttempt(attemptId) || !payload || typeof payload !== 'object' || Array.isArray(payload)) return json({ error: 'INVALID_REQUEST' }, 400);
       const payloadJson = JSON.stringify(payload);
       if (payloadJson.length > 20000) return json({ error: 'PAYLOAD_TOO_LARGE' }, 413);
-      const existing = await env.DB.prepare("SELECT id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at FROM staging_requests WHERE tenant_id = ?1 AND attempt_id = ?2").bind(membership.tenant_id, attemptId).first();
-      if (existing) return json({ request: publicRequest(existing), replayed: true }, 200);
       const requestId = id('req');
       const timestamp = now();
-      await env.DB.prepare("INSERT INTO staging_requests (id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, 'draft', ?5, ?6, ?7, ?7)").bind(requestId, membership.tenant_id, user.id, kind, payloadJson, attemptId, timestamp).run();
-      await audit(env.DB, membership.tenant_id, user.id, 'request.created', 'request', requestId, { kind });
-      const created = await scopedRequest(env.DB, membership.tenant_id, requestId);
-      return json({ request: publicRequest(created), replayed: false }, 201);
+      const results = await env.DB.batch([
+        env.DB.prepare("INSERT INTO staging_requests (id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, 'draft', ?5, ?6, ?7, ?7) ON CONFLICT(tenant_id, attempt_id) DO NOTHING").bind(requestId, membership.tenant_id, user.id, kind, payloadJson, attemptId, timestamp),
+        env.DB.prepare("INSERT INTO staging_audit_events (id, tenant_id, actor_id, action, resource_type, resource_id, metadata_json, created_at) SELECT ?1, tenant_id, created_by, 'request.created', 'request', id, ?2, created_at FROM staging_requests WHERE id = ?3 AND tenant_id = ?4").bind(id('aud'), JSON.stringify({kind}), requestId, membership.tenant_id),
+        env.DB.prepare("SELECT id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at FROM staging_requests WHERE tenant_id = ?1 AND attempt_id = ?2").bind(membership.tenant_id, attemptId)
+      ]);
+      const created = results[2].results?.[0];
+      if (!created) return json({ error: 'REQUEST_UNAVAILABLE' }, 500);
+      if (created.created_by !== user.id || created.kind !== kind || created.payload_json !== payloadJson) return json({ error: 'IDEMPOTENCY_CONFLICT' }, 409);
+      const replayed = created.id !== requestId;
+      return json({ request: publicRequest(created), replayed }, replayed ? 200 : 201);
     }
     const requestMatch = url.pathname.match(/^\/api\/platform\/requests\/([^/]+)$/);
     if (request.method === 'GET' && requestMatch) {

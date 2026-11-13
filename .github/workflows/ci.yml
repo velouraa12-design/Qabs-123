@@ -2,7 +2,7 @@ name: QABS Platform CI & Quality Check
 
 on:
   push:
-    branches: [ main, master, fix/qabs-authorized-remediation-20261113 ]
+    branches: [ main, master, fix/qabs-authorized-remediation-20261113, "staging/**" ]
   pull_request:
     branches: [ main, master ]
 
@@ -20,13 +20,16 @@ jobs:
         node-version: 24
 
     - name: Install Dependencies
-      run: npm install --ignore-scripts --legacy-peer-deps
+      run: npm install --no-package-lock --ignore-scripts --legacy-peer-deps
 
     - name: Run TypeScript & Lint Checks
       run: npm run lint
 
     - name: Test credit transactions (local SQLite model)
       run: npm run test:credits
+
+    - name: Test isolated backend (SQLite and workerd D1/R2 emulators)
+      run: npm run test:backend
 
     - name: Build Application Bundle
       run: npm run build

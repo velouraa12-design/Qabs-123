@@ -62,10 +62,10 @@ export async function commerceRoute(request, env, url) {
   if (!sameOrigin(request)) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
   if (!env.DB) return json({ error: 'DATABASE_UNAVAILABLE' }, 503);
   try {
-    await ensureSchema(env.DB);
-    await ensureCommerceSchema(env.DB);
     const user = await currentUser(env.DB, request);
     if (!user) return json({ error: 'AUTH_REQUIRED' }, 401);
+    await ensureSchema(env.DB);
+    await ensureCommerceSchema(env.DB);
     const membership = await tenantFor(env.DB, user);
     if (!membership) return json({ error: 'TENANT_UNAVAILABLE' }, 503);
     const tenantId = membership.tenant_id;
@@ -99,7 +99,7 @@ export async function commerceRoute(request, env, url) {
       if (!row) return json({ error: 'NOT_FOUND' }, 404);
       const object = await env.ARTIFACTS.get(row.object_key);
       if (!object) return json({ error: 'ARTIFACT_NOT_FOUND' }, 404);
-      return new Response(object.body, { headers: { 'cache-control': 'no-store', 'content-type': row.content_type, 'content-length': String(row.size_bytes), 'content-disposition': `attachment; filename="${row.filename}"` } });
+      return new Response(object.body, { headers: { 'cache-control': 'no-store', 'content-type': row.content_type, 'content-length': String(row.size_bytes), 'content-disposition': `attachment; filename="${row.filename}"`, 'x-content-type-options': 'nosniff' } });
     }
 
     if (request.method === 'GET' && url.pathname === base + '/stores') {
@@ -197,6 +197,7 @@ export async function commerceRoute(request, env, url) {
     }
 
     if (url.pathname === base + '/staff' && request.method === 'GET') {
+      if (!isAdmin(user, membership)) return json({ error: 'FORBIDDEN' }, 403);
       const result = await env.DB.prepare('SELECT m.user_id, u.email, m.role, m.created_at FROM staging_tenant_members m JOIN staging_users u ON u.id = m.user_id WHERE m.tenant_id = ?1 ORDER BY m.created_at ASC').bind(tenantId).all();
       return json({ staff: result.results || [] });
     }
