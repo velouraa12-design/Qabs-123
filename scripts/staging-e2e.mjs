@@ -7,9 +7,10 @@ if (!admin.email || !admin.password || !customer.email || !customer.password) {
 
 function assert(condition, message) { if (!condition) throw new Error(message); }
 function cookieFrom(response) { return response.headers.get('set-cookie')?.split(';', 1)[0] || ''; }
-async function call(path, { method = 'GET', body, cookie = '', form = false } = {}) {
+async function call(path, { method = 'GET', body, cookie = '', form = false, idempotencyKey = '' } = {}) {
   const headers = {};
   if (cookie) headers.cookie = cookie;
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
   if (!form) headers['content-type'] = 'application/json';
   const response = await fetch(`${base}${path}`, { method, headers, body: form ? body : body === undefined ? undefined : JSON.stringify(body) });
   const raw = await response.text();
@@ -44,8 +45,12 @@ const upload = await call('/api/platform/documents', { method: 'POST', cookie: a
 assert(upload.response.status === 201, 'R2 upload failed');
 const download = await call(`/api/platform/documents/${encodeURIComponent(upload.data.document.id)}`, { cookie: adminCookie });
 assert(download.response.ok && download.data.raw === 'QABS staging E2E', 'R2 read failed');
-const ai = await call('/api/platform/ai/usage', { method: 'POST', cookie: adminCookie, body: { units: 1, model: 'qabs-e2e' } });
+const aiKey = `qabs-e2e-${crypto.randomUUID()}`;
+const aiInput = { method: 'POST', cookie: adminCookie, idempotencyKey: aiKey, body: { units: 1, model: 'qabs-e2e' } };
+const ai = await call('/api/platform/ai/usage', aiInput);
 assert(ai.response.status === 201, 'AI credit usage failed');
+const replay = await call('/api/platform/ai/usage', aiInput);
+assert(replay.response.status === 200 && replay.data.replayed === true && replay.data.usage.id === ai.data.usage.id, 'AI replay protection failed');
 const summary = await call('/api/platform/admin/summary', { cookie: adminCookie });
 assert(summary.response.ok && summary.data.role === 'admin', 'admin summary failed');
 
