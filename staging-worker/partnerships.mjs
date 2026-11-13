@@ -157,7 +157,7 @@ export async function partnershipsRoute(request, env, url) {
     if (request.method === 'GET' && url.pathname === '/api/platform/admin/partnership-applications') {
       if (!admin) return json({ error: 'FORBIDDEN' }, 403);
       const result = await env.DB.prepare('SELECT * FROM staging_partnership_applications ORDER BY created_at DESC LIMIT 200').all();
-      return json({ applications: (result.results || []).map(publicApplication) });
+      return json({ applications: (result.results || []).map(row => publicApplication(row, true)) });
     }
     const statusMatch = url.pathname.match(/^\/api\/platform\/admin\/partnership-applications\/([^/]+)\/status$/);
     if (request.method === 'POST' && statusMatch) {
