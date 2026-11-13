@@ -30,3 +30,10 @@ test('environment inventory requires synthetic-only data and no production bindi
   assert.throws(() => validateEnvironmentInventory({ environment: 'staging', serviceBindings: [], routes: [], customDomains: [], crons: [], productionSecretsPresent: true, dataClassification: 'synthetic-only' }), /secret separation/);
   assert.throws(() => validateEnvironmentInventory({ environment: 'staging', serviceBindings: [], routes: [], customDomains: [], crons: [], productionSecretsPresent: false, dataClassification: 'unknown' }), /synthetic-only/);
 });
+
+
+test('outbound URL policy rejects literal IP and local/metadata hostnames even if allowlisted', () => {
+  for (const target of ['https://127.0.0.1/', 'https://0x7f000001/', 'https://169.254.169.254/', 'https://10.0.0.1/', 'https://192.168.1.1/', 'https://[::1]/', 'https://[::ffff:7f00:1]/', 'https://localhost/', 'https://api.localhost/', 'https://metadata.google.internal/', 'https://service.local/', 'https://device.home.arpa/']) {
+    assert.throws(() => validateOutboundUrl(target, [new URL(target).origin]), /local or metadata/);
+  }
+});

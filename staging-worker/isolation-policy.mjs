@@ -41,6 +41,10 @@ export function validateOutboundUrl(input, allowedOrigins = []) {
   if (url.port && !['443'].includes(url.port)) block('non-standard outbound ports are prohibited');
   const host = url.hostname.toLowerCase().replace(/\.$/, '');
   if (FORBIDDEN_HOSTS.has(host) || host.endsWith('.qabs1.store')) block('QABS production/preview host is forbidden');
+  // Deny all literal IPs, including public ones, plus common local/metadata
+  // hostnames even when accidentally allowlisted. URL canonicalizes IPv4 forms.
+  // This does NOT inspect DNS answers or control network egress.
+  if (host.startsWith('[') || /^\d+\.\d+\.\d+\.\d+$/.test(host) || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal') || host.endsWith('.lan') || host === 'home.arpa' || host.endsWith('.home.arpa') || host === 'metadata') block('literal IP and local or metadata hosts are forbidden');
   if (!allowedOrigins.includes(url.origin)) block('outbound origin is not on the explicit allowlist');
   return true;
 }

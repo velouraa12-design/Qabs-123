@@ -63,3 +63,7 @@ The local Wrangler JSON preflight can be run as `npm run validate:staging-manife
 The legacy manifest guard also invokes policy validation, but remains pinned to the existing legacy targets. These are not approved here for deployment or testing. Local workerd tests now cover synthetic draft-store/product/order tenant boundaries as well as the existing auth, document and credit scenarios. Tests run only in local emulators; no remote data, payment, email or AI integration is exercised. The order endpoint only records a test order and reports payment disabled.
 
 Before any deployment, obtain an independently verified inventory, prove remote isolation and synthetic classification, settle cost and backup/restore authorization, connect preflight and runtime egress controls to a reviewed deployment path, and pass remote end-to-end acceptance. No production-critical resource may be modified as part of preparation.
+
+
+### Outbound URL policy limitation
+The outbound URL preflight rejects literal IPv4 and IPv6 addresses and common local/metadata hostnames even if supplied on the allowlist. This is defense in depth only: DNS resolution/rebinding, redirects, other network paths and direct `fetch` calls are not controlled by this function. It is not wired into network access or an egress enforcement system. Production isolation remains blocked pending independent runtime enforcement and remote tests.
