@@ -1,5 +1,5 @@
 import { currentUser } from './auth.mjs';
-import { audit, ensureSchema, tenantFor } from './platform.mjs';
+import { ensureSchema, tenantFor } from './platform.mjs';
 
 const SCHEMA = [
   "CREATE TABLE IF NOT EXISTS staging_partnership_applications (id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL REFERENCES staging_tenants(id) ON DELETE CASCADE, applicant_user_id TEXT NOT NULL REFERENCES staging_users(id) ON DELETE RESTRICT, partnership_type TEXT NOT NULL, applicant_json TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'new' CHECK(status IN ('new','under_review','needs_information','approved','rejected')), admin_note TEXT, attempt_id TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, UNIQUE (tenant_id, attempt_id))",
@@ -49,7 +49,7 @@ function applicantFrom(input) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return null;
   const applicant = {
     full_name: clean(input.full_name, 160, true),
-    email: clean(input.email, 254, true).toLowerCase(),
+    email: (clean(input.email, 254, true) || '').toLowerCase(),
     phone: clean(input.phone, 40, true),
     country: clean(input.country, 100, true),
     city: clean(input.city, 100, true),
@@ -63,8 +63,7 @@ function applicantFrom(input) {
   };
   if (Object.values(applicant).some(value => value === null)) return null;
   if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(applicant.email)) return null;
-  if (!TYPES.has(input.partnership_type)) return null;
-  applicant.partnership_type = input.partnership_type;
+  if (applicant.website && !/^https?:\\/\\//i.test(applicant.website)) return null;
   return applicant;
 }
 function publicApplication(row) {
@@ -141,7 +140,7 @@ export async function partnershipsRoute(request, env, url) {
       const attemptId = input && input.attempt_id;
       if (typeof attemptId !== 'string' || !/^[A-Za-z0-9._:-]{8,120}$/.test(attemptId) || !TYPES.has(input?.partnership_type)) return json({ error: 'INVALID_APPLICATION' }, 400);
       const applicant = applicantFrom(input.applicant);
-      if (!applicant || applicant.partnership_type !== undefined) return json({ error: 'INVALID_APPLICATION' }, 400);
+      if (!applicant) return json({ error: 'INVALID_APPLICATION' }, 400);
       const applicationId = id('par');
       const timestamp = now();
       const applicantJson = JSON.stringify(applicant);
