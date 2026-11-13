@@ -1,3 +1,5 @@
+import { validateIsolatedWorkerConfig } from './isolation-policy.mjs';
+
 export const EXPECTED_D1_UUID = 'bee3d2a1-def7-4e71-857e-3c21e42f809d';
 export const EXPECTED_D1_NAME = 'qabs-isolated-staging-db-20261110';
 export const EXPECTED_R2_BUCKET = 'qabs-isolated-staging-artifacts-20261110';
@@ -82,6 +84,9 @@ export function assertIsolatedManifest(manifest) {
   if (r2.binding !== 'ARTIFACTS' || r2.bucket_name !== EXPECTED_R2_BUCKET) fail('R2 binding is not the approved isolated target');
   if ('env' in r2 || 'environment' in r2) fail('R2 binding may not select another environment');
   scanForbidden(manifest);
+  // The existing runtime stays pinned to the legacy targets. This check does
+  // not establish data classification or authorization to deploy.
+  validateIsolatedWorkerConfig({ name: staging.name, bindings: { D1: { id: d1.database_id, name: d1.database_name }, R2: { bucket: r2.bucket_name } } }, { workerName: `${EXPECTED_WORKER_NAME}-staging`, d1Id: EXPECTED_D1_UUID, d1Name: EXPECTED_D1_NAME, r2Bucket: EXPECTED_R2_BUCKET });
   return true;
 }
 
