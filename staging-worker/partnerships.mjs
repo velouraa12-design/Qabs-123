@@ -62,8 +62,8 @@ function applicantFrom(input) {
     about: clean(input.about, 3000, true)
   };
   if (Object.values(applicant).some(value => value === null)) return null;
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(applicant.email)) return null;
-  if (applicant.website && !/^https?:\\/\\//i.test(applicant.website)) return null;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(applicant.email)) return null;
+  if (applicant.website && !/^https?:\/\//i.test(applicant.website)) return null;
   return applicant;
 }
 function publicApplication(row) {
