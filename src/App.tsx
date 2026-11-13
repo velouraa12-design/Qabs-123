@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { ArrowUpRight, ArrowRight, Building2, Check, ChevronDown, CircleHelp, CreditCard, FileText, Globe2, LayoutDashboard, LockKeyhole, Menu, MessageCircle, Package, PanelTop, Settings, ShieldCheck, ShoppingBag, Sparkles, Store, Wallet, X } from 'lucide-react';
 import { qabsHero } from './qabsHero';
+import { qabsLogo } from './qabsLogo';
 import './redesign.css';
 
 type Lang = 'ar' | 'en';
@@ -45,7 +46,7 @@ function App(){
  return <div className="site">
   <a className="skip" href="#main">{L('تجاوز إلى المحتوى','Skip to content')}</a>
   <header className="topbar"><div className="wrap topinner">
-   <Link to="/" className="brand"><img src="/qabas-logo.png" alt={L('قبس QABS — الصفحة الرئيسية','QABS — home')}/></Link>
+   <Link to="/" className="brand"><img src={qabsLogo} alt={L('قبس QABS — الصفحة الرئيسية','QABS — home')}/></Link>
    <nav className={'topnav '+(menu?'open':'')} aria-label={L('التنقل الرئيسي','Main navigation')}>
     <Link to="/">{L('الرئيسية','Home')}</Link><a href="#services" onClick={(e)=>{e.preventDefault();if(route!=='/'){go('/');setTimeout(()=>document.getElementById('services')?.scrollIntoView(),100)}else document.getElementById('services')?.scrollIntoView();setMenu(false)}}>{L('خدماتنا','Services')}</a><Link to="/workspace/overview">{L('استكشف البوابة','Explore workspace')}</Link>
    </nav>
@@ -68,7 +69,7 @@ function App(){
    <p className="workspace-foot">{L('ملاحظة: المعاينة لا تمثل جاهزية أي خدمة تشغيلية.','Note: this preview does not establish operational readiness.')}</p></div></section>}
    {!known&&<section className="wrap inner-page"><h1>{L('الصفحة غير موجودة','Page not found')}</h1><p>{L('تحقق من الرابط أو عد إلى الصفحة الرئيسية.','Check the link or return home.')}</p><Link to="/" className="btn btn-primary">{L('الصفحة الرئيسية','Back home')}</Link></section>}
   </main>
-  <footer className="footer"><div className="wrap footer-grid"><div><Link to="/" className="footer-logo"><img src="/qabas-logo.png" alt="QABS | قبس"/></Link><p>{L('أفكارك تستحق مساحة أوضح للنمو.','A clearer space for your ambitions to grow.')}</p></div><div><strong>{L('استكشف','Explore')}</strong><Link to="/services/formation">{L('تأسيس الشركات','Company formation')}</Link><Link to="/services/stores">{L('المتاجر الإلكترونية','Online stores')}</Link><Link to="/workspace/overview">{L('معاينة البوابة','Workspace preview')}</Link></div><div><strong>{L('معلومات مهمة','Important information')}</strong><p>{L('الرسوم الحكومية والخدمات الإضافية منفصلة، وتخضع أهلية الدفع لموافقة المزود.','Government and additional service fees are separate. Payment eligibility is subject to provider approval.')}</p></div></div><div className="wrap footer-bottom"><span>© 2026 QABS | قبس</span><span>{L('معاينة تجريبية','Preview experience')}</span></div></footer>
+  <footer className="footer"><div className="wrap footer-grid"><div><Link to="/" className="footer-logo"><img src={qabsLogo} alt="QABS | قبس"/></Link><p>{L('أفكارك تستحق مساحة أوضح للنمو.','A clearer space for your ambitions to grow.')}</p></div><div><strong>{L('استكشف','Explore')}</strong><Link to="/services/formation">{L('تأسيس الشركات','Company formation')}</Link><Link to="/services/stores">{L('المتاجر الإلكترونية','Online stores')}</Link><Link to="/workspace/overview">{L('معاينة البوابة','Workspace preview')}</Link></div><div><strong>{L('معلومات مهمة','Important information')}</strong><p>{L('الرسوم الحكومية والخدمات الإضافية منفصلة، وتخضع أهلية الدفع لموافقة المزود.','Government and additional service fees are separate. Payment eligibility is subject to provider approval.')}</p></div></div><div className="wrap footer-bottom"><span>© 2026 QABS | قبس</span><span>{L('معاينة تجريبية','Preview experience')}</span></div></footer>
  </div>
 }
 export default App;

@@ -9,6 +9,10 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'react-dom/client': 'preact/compat/client',
+        'react-dom': 'preact/compat',
+        'react/jsx-runtime': 'preact/jsx-runtime',
+        'react': 'preact/compat',
       },
     },
     server: {
