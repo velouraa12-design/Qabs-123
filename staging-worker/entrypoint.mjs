@@ -7,6 +7,7 @@ import {
 } from './auth.mjs';
 import { platformRoute } from './platform.mjs';
 import { commerceRoute } from './commerce.mjs';
+import { partnershipsRoute } from './partnerships.mjs';
 import {
   EXPECTED_D1_NAME,
   EXPECTED_D1_UUID,
@@ -64,7 +65,7 @@ function loginPage() {
 }
 
 function workspacePage(user) {
-  const body = `<header class="top"><div class="brand"><span class="mark">Q</span><span>مساحة عمل قبس</span></div><button id="logout" type="button" style="width:auto;margin:0;padding:10px 16px;background:#fff;color:#081b36">تسجيل الخروج</button></header><main class="wrap workspace"><div class="eyebrow">حساب تجريبي مصادق</div><h1 style="color:#081b36">مرحبًا ${escapeHtml(user.email)}</h1><p class="meta">الدور الحالي: ${escapeHtml(user.role)} · هذه مساحة Staging معزولة.</p><div class="grid"><article class="tile"><span class="badge">غير مفعّل</span><h2>طلبات الخدمات</h2><p>ستظهر هنا الطلبات بعد ربط دورة الطلبات الآمنة.</p></article><article class="tile"><span class="badge">غير مفعّل</span><h2>المستندات</h2><p>الرفع غير مفعّل حتى يتم اعتماد تخزين خاص وروابط مؤقتة.</p></article><article class="tile"><span class="badge">غير مفعّل</span><h2>المتاجر</h2><p>إنشاء المتاجر والدفع غير مفعّلين في هذه النسخة.</p></article></div></main>`;
+  const body = `<header class="top"><div class="brand"><span class="mark">Q</span><span>مساحة عمل قبس</span></div><button id="logout" type="button" style="width:auto;margin:0;padding:10px 16px;background:#fff;color:#081b36">تسجيل الخروج</button></header><main class="wrap workspace"><div class="eyebrow">حساب تجريبي مصادق</div><h1 style="color:#081b36">مرحبًا ${escapeHtml(user.email)}</h1><p class="meta">الدور الحالي: ${escapeHtml(user.role)} · هذه مساحة Staging معزولة.</p><div class="grid"><article class="tile"><span class="badge">غير مفعّل</span><h2>طلبات الخدمات</h2><p>ستظهر هنا الطلبات بعد ربط دورة الطلبات الآمنة.</p></article><article class="tile"><span class="badge">غير مفعّل</span><h2>المستندات</h2><p>الرفع غير مفعّل حتى يتم اعتماد تخزين خاص وروابط مؤقتة.</p></article><article class="tile"><span class="badge">غير مفعّل</span><h2>المتاجر</h2><p>إنشاء المتاجر والدفع غير مفعّلين في هذه النسخة.</p></article><article class="tile"><span class="badge">متاح للتقديم في Staging</span><h2>الشراكات</h2><p>قدّم طلب شراكة وتابع حالته بعد تسجيل الدخول.</p><a class="button" href="/partnerships">طلب شراكة</a></article></div></main>`;
   const script = `<script>document.querySelector('#logout').addEventListener('click',async()=>{await window['fetch']('/api/auth/logout',{method:'POST'});location.href='/login?portal=workspace'});</script>`;
   return pageShell('مساحة عمل قبس', body, script);
 }
@@ -74,7 +75,7 @@ const worker = {
     try { assertIsolatedRuntime(env); } catch (error) { return json({ status: 'blocked', error: error.message }, 500); }
     const url = new URL(request.url);
     if (request.method === 'GET' && (url.pathname === '/health' || url.pathname === '/diagnostic')) return json(diagnosticPayload());
-    if (request.method === 'GET' && url.pathname === '/') return html(pageShell('قبس الرقمية — Staging', `<header class="top"><div class="brand"><span class="mark">Q</span><span>قبس الرقمية</span></div><a href="/login?portal=workspace">تسجيل الدخول</a></header><main class="wrap"><section class="card"><div class="eyebrow">QABS STAGING</div><span class="badge">تجريبي — غير مفعّل للإنتاج</span><h1 style="color:#081b36">بوابة قبس الرقمية</h1><p>نسخة اختبار معزولة للمصادقة والرحلة الأساسية. لا معاملات مالية أو بيانات إنتاج.</p><a href="/login?portal=workspace"><button type="button">فتح صفحة الدخول</button></a><div class="links"><a href="/health">Health</a><a href="/control-center/">مركز التحكم</a></div></section></main>`));
+    if (request.method === 'GET' && url.pathname === '/') return html(pageShell('قبس الرقمية — Staging', `<header class="top"><div class="brand"><span class="mark">Q</span><span>قبس الرقمية</span></div><nav style="display:flex;gap:16px"><a href="/partnerships">طلب شراكة</a><a href="/login?portal=workspace">تسجيل الدخول</a></nav></header><main class="wrap"><section class="card"><div class="eyebrow">QABS STAGING</div><span class="badge">تجريبي — غير مفعّل للإنتاج</span><h1 style="color:#081b36">بوابة قبس الرقمية</h1><p>نسخة اختبار معزولة للمصادقة والرحلة الأساسية. لا معاملات مالية أو بيانات إنتاج.</p><a href="/login?portal=workspace"><button type="button">فتح صفحة الدخول</button></a><div class="links"><a href="/health">Health</a><a href="/control-center/">مركز التحكم</a></div></section></main>`));
     if (request.method === 'GET' && url.pathname === '/login') return html(loginPage());
     if (request.method === 'GET' && url.pathname === '/workspace') { const user = await currentUser(env.DB, request); return user ? html(workspacePage(user)) : redirect('/login?portal=workspace'); }
     if (url.pathname.startsWith('/api/auth/')) {
@@ -89,6 +90,8 @@ const worker = {
       }
     }
     if (request.method === 'GET' && (url.pathname === '/control-center/' || url.pathname === '/control-center')) return html(pageShell('مركز تحكم قبس', `<header class="top"><div class="brand"><span class="mark">Q</span><span>مركز تحكم قبس</span></div><a href="/">بوابة Staging</a></header><main class="wrap"><section class="card"><div class="eyebrow">PUBLIC STAGING PREVIEW</div><span class="badge">معاينة عامة — بدون تسجيل دخول</span><h1 style="color:#081b36">مركز التحكم</h1><p>هذه واجهة معاينة عامة للـStaging فقط. لا توجد عمليات إدارية أو بيانات عملاء متصلة، ولا يُسمح باستخدامها للإنتاج.</p><div class="links"><a href="/health">Health</a><a href="/recovered-formation/studio/formation">تأسيس الشركات</a></div></section></main>`));
+    const partnershipResult = await partnershipsRoute(request, env, url);
+    if (partnershipResult) return partnershipResult;
     const commerceResult = await commerceRoute(request, env, url);
     if (commerceResult) return commerceResult;
     const platformResult = await platformRoute(request, env, url);
