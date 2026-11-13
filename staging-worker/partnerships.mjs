@@ -110,7 +110,7 @@ function adminPage(applications) {
 
 export async function partnershipsRoute(request, env, url) {
   const isPage = url.pathname === '/partnerships' || url.pathname === '/partnerships/admin';
-  const isApi = url.pathname.startsWith('/api/platform/partnership-applications');
+  const isApi = url.pathname.startsWith('/api/platform/partnership-applications') || url.pathname.startsWith('/api/platform/admin/partnership-applications');
   if (!isPage && !isApi) return null;
   if (!sameOrigin(request)) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
   if (!env.DB) return json({ error: 'DATABASE_UNAVAILABLE' }, 503);
