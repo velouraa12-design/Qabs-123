@@ -22,14 +22,14 @@ export const TemplateHubView: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'modules' | 'database' | 'setup' | 'security'>('overview');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [testRunning, setTestRunning] = useState(false);
-  const [testResults, setTestResults] = useState<{ name: string; status: 'passed' | 'pending' }[]>([
-    { name: isAr ? 'تثبيت الاعتماديات (Dependencies Resolution)' : 'Dependencies Resolution', status: 'passed' },
-    { name: isAr ? 'بناء التطبيق خالي من الأخطاء (Build & Typecheck)' : 'Vite Production Build', status: 'passed' },
-    { name: isAr ? 'عزل بيانات المتاجر والمستأجرين (Multi-Tenant Isolation)' : 'Tenant Isolation Barrier', status: 'passed' },
-    { name: isAr ? 'صلاحيات الدخول الآمنة (RBAC Enforcement)' : 'RBAC Security Matrix', status: 'passed' },
-    { name: isAr ? 'سلامة الخطوط واللغات (Bilingual RTL & LTR)' : 'Bilingual RTL/LTR Rendering', status: 'passed' },
-    { name: isAr ? 'فحص تسريب الأسرار (Zero Leak Secrets Audit)' : 'Secret Scan (Zero Leaks)', status: 'passed' }
+  const [testRunning] = useState(false);
+  const [testResults] = useState<{ name: string; status: 'passed' | 'pending' }[]>([
+    { name: isAr ? 'تثبيت الاعتماديات (Dependencies Resolution)' : 'Dependencies Resolution', status: 'pending' },
+    { name: isAr ? 'بناء التطبيق خالي من الأخطاء (Build & Typecheck)' : 'Vite Production Build', status: 'pending' },
+    { name: isAr ? 'عزل بيانات المتاجر والمستأجرين (Multi-Tenant Isolation)' : 'Tenant Isolation Barrier', status: 'pending' },
+    { name: isAr ? 'صلاحيات الدخول الآمنة (RBAC Enforcement)' : 'RBAC Security Matrix', status: 'pending' },
+    { name: isAr ? 'سلامة الخطوط واللغات (Bilingual RTL & LTR)' : 'Bilingual RTL/LTR Rendering', status: 'pending' },
+    { name: isAr ? 'فحص تسريب الأسرار (Zero Leak Secrets Audit)' : 'Secret Scan (Zero Leaks)', status: 'pending' }
   ]);
 
   const copyToClipboard = (text: string, key: string) => {
@@ -40,11 +40,7 @@ export const TemplateHubView: React.FC = () => {
   };
 
   const runAllAcceptanceTests = () => {
-    setTestRunning(true);
-    setTimeout(() => {
-      setTestRunning(false);
-      showToast(isAr ? 'نجحت جميع اختبارات القبول بنسبة 100%' : 'All 6 acceptance tests passed 100%');
-    }, 1200);
+    showToast(isAr ? 'لا يمكن تشغيل الاختبارات من هذه الواجهة؛ راجع سجل CI الفعلي.' : 'Tests cannot be run from this interface; review the actual CI logs.');
   };
 
   const modulesList = [
@@ -79,8 +75,8 @@ export const TemplateHubView: React.FC = () => {
             </div>
             <p className="text-xs text-slate-400 mt-1">
               {isAr
-                ? 'مستودع قالب مستقل جاهز للاستخدام والتوزيع، مع التوثيق الكامل، واختبارات القبول، وأدلة النشر على Shopify و Cloudflare'
-                : 'Production-ready GitHub Template for independent deployment, documentation, acceptance tests, and edge deployment'}
+                ? 'واجهة معاينة؛ يلزم التحقق المستقل من جاهزية النشر ونتائج الاختبارات'
+                : 'Preview interface; deployment readiness and acceptance require independent verification'}
             </p>
           </div>
 
@@ -170,7 +166,7 @@ export const TemplateHubView: React.FC = () => {
                   <span>{isAr ? 'لوحة اختبارات القبول الصارمة (Acceptance Tests)' : 'Acceptance Test Suite Matrix'}</span>
                 </h3>
                 <span className="text-[11px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                  6 / 6 PASSED
+                  NOT VERIFIED
                 </span>
               </div>
 
@@ -178,7 +174,7 @@ export const TemplateHubView: React.FC = () => {
                 {testResults.map((t, idx) => (
                   <div key={idx} className="p-3 bg-[#051724] border border-cyan-950/60 rounded-lg flex items-center justify-between">
                     <span className="text-xs text-slate-200">{t.name}</span>
-                    <span className="text-[10px] text-emerald-400 font-mono font-bold">✓ PASS</span>
+                    <span className="text-[10px] text-emerald-400 font-mono font-bold">NOT VERIFIED</span>
                   </div>
                 ))}
               </div>
@@ -372,21 +368,21 @@ CREATE TABLE billing_invoices (
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <span>{isAr ? 'تقرير الأمان والتحقق من التراخيص' : 'Security & Licensing Compliance Report'}</span>
               </h3>
-              <span className="text-xs text-emerald-400 font-mono">Status: COMPLIANT</span>
+              <span className="text-xs text-emerald-400 font-mono">Status: NOT VERIFIED</span>
             </div>
 
             <div className="space-y-3 text-xs">
               <div className="p-3 rounded-lg bg-[#051724] border border-cyan-950 flex justify-between items-center">
                 <span className="text-slate-300">{isAr ? 'عزل أسرار الإنتاج والبيانات الحساسة:' : 'Production Secret Sanitization:'}</span>
-                <span className="text-emerald-400 font-mono font-bold">100% Zero-Leak Verified</span>
+                <span className="text-emerald-400 font-mono font-bold">NOT VERIFIED</span>
               </div>
               <div className="p-3 rounded-lg bg-[#051724] border border-cyan-950 flex justify-between items-center">
                 <span className="text-slate-300">{isAr ? 'توافق التراخيص مفتوحة المصدر (MIT / Apache 2.0):' : 'Open Source License Compatibility:'}</span>
-                <span className="text-emerald-400 font-mono font-bold">Permissive MIT / Apache 2.0</span>
+                <span className="text-emerald-400 font-mono font-bold">NOT VERIFIED</span>
               </div>
               <div className="p-3 rounded-lg bg-[#051724] border border-cyan-950 flex justify-between items-center">
                 <span className="text-slate-300">{isAr ? 'فصل بيئة الاختبار (Sandbox Guardrails):' : 'Sandbox Financial Isolation:'}</span>
-                <span className="text-emerald-400 font-mono font-bold">Active (Zero Real Charges)</span>
+                <span className="text-emerald-400 font-mono font-bold">NOT VERIFIED</span>
               </div>
             </div>
           </div>
