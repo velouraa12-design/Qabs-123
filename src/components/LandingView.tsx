@@ -19,7 +19,6 @@ import {
   Layers,
   Landmark,
   FileCheck2,
-  Edit3,
   Phone,
   HelpCircle,
   Zap,
@@ -39,7 +38,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onOpenAIModal
 }) => {
   const { language, setMode } = useApp();
-  const { siteContent, setEditorOpen } = useCustomizer();
+  const { siteContent } = useCustomizer();
   const isAr = language === 'ar';
 
   // Collapsible states pricing
@@ -108,7 +107,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             {/* Hero Text Column */}
             <div className="lg:col-span-7 space-y-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#004457]/10 dark:bg-teal-950/80 border border-[#00A896]/40 text-[#004457] dark:text-teal-300 text-xs font-extrabold">
-                <Sparkles className="w-3.5 h-3.5 text-[#00A896]" />
+                <Sparkles className="w-3.5 h-3.5 text-[#007468] dark:text-[#72dfd2]" />
                 <span>{isAr ? siteContent.heroBadgeAr : siteContent.heroBadgeEn}</span>
               </div>
 
@@ -134,7 +133,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   onClick={() => setMode('portal')}
                   className="px-5 py-3.5 rounded-xl bg-white dark:bg-slate-900 border-2 border-[#004457] text-[#004457] dark:text-teal-300 font-black text-xs sm:text-sm hover:bg-teal-50/60 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
                 >
-                  <Store className="w-4 h-4 text-[#00A896]" />
+                  <Store className="w-4 h-4 text-[#007468] dark:text-[#72dfd2]" />
                   <span>{isAr ? 'الدخول للبوابة الموحدة (المتاجر والشركات)' : 'Open Unified Portal'}</span>
                 </button>
 
@@ -148,14 +147,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   </button>
                 )}
 
-                <button
-                  onClick={() => setEditorOpen(true)}
-                  className="px-3.5 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-[#004457] dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
-                  title={isAr ? 'تعديل نصوص وصور الواجهة' : 'Edit Hero & Package'}
-                >
-                  <Edit3 className="w-3.5 h-3.5 text-[#00A896]" />
-                  <span>{isAr ? 'تخصيص الواجهة' : 'Customize'}</span>
-                </button>
+
               </div>
 
               {/* Official Quick Links Strip */}
@@ -164,15 +156,15 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   href="https://qabs1.store"
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-[#00A896] font-mono font-bold flex items-center gap-1"
+                  className="hover:text-[#007468] dark:text-[#72dfd2] font-mono font-bold flex items-center gap-1"
                 >
-                  <Globe className="w-3.5 h-3.5 text-[#00A896]" />
+                  <Globe className="w-3.5 h-3.5 text-[#007468] dark:text-[#72dfd2]" />
                   <span>qabs1.store</span>
                 </a>
                 <span>•</span>
                 <button
                   onClick={() => setMode('portal')}
-                  className="hover:text-[#00A896] font-mono font-bold cursor-pointer"
+                  className="hover:text-[#007468] dark:text-[#72dfd2] font-mono font-bold cursor-pointer"
                 >
                   portal.qabs1.store
                 </button>
@@ -181,7 +173,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   href={`https://wa.me/${siteContent.whatsappNumber.replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="hover:text-[#00A896] font-mono font-bold flex items-center gap-1"
+                  className="hover:text-[#007468] dark:text-[#72dfd2] font-mono font-bold flex items-center gap-1"
                 >
                   <Phone className="w-3.5 h-3.5 text-[#C8A24A]" />
                   <span dir="ltr">{siteContent.whatsappNumber}</span>
@@ -199,7 +191,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                     className="h-12 w-auto object-contain bg-white rounded-xl px-2 py-1 border border-slate-100"
                   />
                   <div className="text-left">
-                    <span className="text-[11px] text-slate-400 block font-bold">
+                    <span className="text-[11px] text-slate-600 dark:text-slate-300 block font-bold">
                       {isAr ? 'باقة التأسيس والدفع الشاملة' : 'Turnkey Launch Package'}
                     </span>
                     <span className="text-2xl font-black text-[#004457] dark:text-[#E5C158] font-mono">
@@ -222,7 +214,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <ul className="space-y-2.5">
                   {(isAr ? siteContent.showcaseFeaturesAr : siteContent.showcaseFeaturesEn).map((feat, idx) => (
                     <li key={idx} className="flex items-center gap-2.5 text-xs font-bold text-slate-700 dark:text-slate-200">
-                      <CheckCircle2 className="w-4 h-4 text-[#00A896] shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-[#007468] dark:text-[#72dfd2] shrink-0" />
                       <span>{feat}</span>
                     </li>
                   ))}
@@ -237,7 +229,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   </button>
                   <button
                     onClick={() => setMode('portal')}
-                    className="py-3 px-4 rounded-xl bg-[#00A896] hover:bg-[#008f7f] text-white font-black text-xs transition-all cursor-pointer text-center"
+                    className="py-3 px-4 rounded-xl bg-[#007468] hover:bg-[#005c55] text-white font-black text-xs transition-all cursor-pointer text-center"
                   >
                     {isAr ? 'البوابة الموحدة' : 'Unified Portal'}
                   </button>
@@ -257,7 +249,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
+              <div className="text-2xl sm:text-3xl font-black text-[#007468] dark:text-[#72dfd2] font-mono">
                 EIN
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
@@ -273,7 +265,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               </div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-black text-[#00A896] font-mono">
+              <div className="text-2xl sm:text-3xl font-black text-[#007468] dark:text-[#72dfd2] font-mono">
                 {isAr ? 'الرسوم' : 'Fees'}
               </div>
               <div className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
@@ -288,7 +280,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs font-black text-[#00A896] uppercase">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] uppercase">
               {isAr ? 'منظومة قبس الرقمية المتكاملة' : 'QABS Unified Digital Ecosystem'}
             </span>
             <h2 className="text-2xl font-black text-[#003445] dark:text-white mt-1">
@@ -307,7 +299,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           >
             <div className="space-y-3">
               <div className="w-11 h-11 rounded-xl bg-[#004457]/10 dark:bg-teal-950 text-[#004457] dark:text-teal-300 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-[#00A896]" />
+                <Building2 className="w-5 h-5 text-[#007468] dark:text-[#72dfd2]" />
               </div>
               <h3 className="text-base font-black text-[#003445] dark:text-white">
                 {isAr ? 'تأسيس الشركات الأمريكية والبريطانية' : 'US & UK Company Formation'}
@@ -318,7 +310,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Register LLC or C-Corp in all 50 US states or UK LTD with full corporate documents.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] flex items-center gap-1">
               <span>{isAr ? 'فتح بوابة التأسيس' : 'Open Formation Wizard'}</span>
               <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
@@ -342,7 +334,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Official IRS CP575 EIN issuance, registered agent address, and annual state filings.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] flex items-center gap-1">
               <span>{isAr ? 'إدارة الوثائق والامتثال' : 'Manage Compliance'}</span>
               <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
@@ -355,7 +347,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
           >
             <div className="space-y-3">
               <div className="w-11 h-11 rounded-xl bg-[#004457]/10 dark:bg-teal-950 text-[#004457] dark:text-teal-300 flex items-center justify-center">
-                <Store className="w-5 h-5 text-[#00A896]" />
+                <Store className="w-5 h-5 text-[#007468] dark:text-[#72dfd2]" />
               </div>
               <h3 className="text-base font-black text-[#003445] dark:text-white">
                 {isAr ? 'منصة متاجر قبس (QABS Stores & Studio)' : 'QABS Multi-Tenant Stores & Studio'}
@@ -366,7 +358,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Independent online store per client with 16-section dashboard, visual QABS Studio, and full isolation.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] flex items-center gap-1">
               <span>{isAr ? 'إدارة المتاجر الإلكترونية' : 'Open QABS Stores'}</span>
               <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
@@ -390,7 +382,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   : 'Connect Mercury, Wise, Stripe, PayPal, Tap & Moyasar with verified governance.'}
               </p>
             </div>
-            <span className="text-xs font-black text-[#00A896] flex items-center gap-1">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] flex items-center gap-1">
               <span>{isAr ? 'عرض الباقات والمدفوعات' : 'View Plans & Banking'}</span>
               <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
             </span>
@@ -402,7 +394,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white dark:bg-[#071D2B] border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+            <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] uppercase tracking-wider">
               {isAr ? 'كيف تبدأ شركتك وتجارتك مع قبس؟' : 'How It Works'}
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-[#003445] dark:text-white">
@@ -431,7 +423,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
             </div>
 
             <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 relative">
-              <div className="w-10 h-10 rounded-xl bg-[#00A896] text-white font-black text-sm flex items-center justify-center font-mono">
+              <div className="w-10 h-10 rounded-xl bg-[#007468] text-white font-black text-sm flex items-center justify-center font-mono">
                 02
               </div>
               <h3 className="text-base font-black text-[#003445] dark:text-white">
@@ -464,7 +456,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
       {/* 4. JURISDICTION COMPARISON TABLE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div>
-          <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+          <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] uppercase tracking-wider">
             {isAr ? 'دليل الاختيار الذكي' : 'Jurisdiction Comparison'}
           </span>
           <h2 className="text-2xl font-black text-[#003445] dark:text-white mt-1">
@@ -489,7 +481,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <td className="p-4 font-black text-[#004457] dark:text-white">
                   {isAr ? 'وايومنغ (Wyoming - WY) ⭐' : 'Wyoming (WY)'}
                 </td>
-                <td className="p-4 text-emerald-600 font-bold">0% (معفاة تماماً)</td>
+                <td className="p-4 text-slate-700 dark:text-slate-300">{isAr ? 'تختلف الالتزامات بحسب النشاط والكيان' : 'Obligations depend on activity and entity'}</td>
                 <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{isAr ? 'تختلف البيانات العامة حسب المتطلبات' : 'Public disclosures vary by requirement'}</td>
                 <td className="p-4 font-mono">{isAr ? '60 دولاراً كحد أدنى سنوياً؛ قد يزيد بحسب الأصول' : '$60 annual minimum; may increase with assets'}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">التجارة الإلكترونية، المتاجر الرقمية، والخدمات عن بعد</td>
@@ -506,9 +498,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <td className="p-4 font-black text-[#004457] dark:text-white">
                   {isAr ? 'ديلاوير (Delaware - DE)' : 'Delaware (DE)'}
                 </td>
-                <td className="p-4 text-slate-700 dark:text-slate-300 font-bold">0% (خارج الولاية)</td>
+                <td className="p-4 text-slate-700 dark:text-slate-300">{isAr ? 'تختلف الالتزامات بحسب النشاط والكيان' : 'Obligations depend on activity and entity'}</td>
                 <td className="p-4 font-bold text-slate-800 dark:text-slate-200">حماية قانونية متقدمة (Court of Chancery)</td>
-                <td className="p-4 font-mono">$300 / سنوياً</td>
+                <td className="p-4">{isAr ? 'تختلف الرسوم حسب نوع الكيان' : 'Fees depend on entity type'}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">الشركات الناشئة التقنية، جذب الاستثمار وصناديق VC</td>
                 <td className="p-4 text-center">
                   <button
@@ -523,9 +515,9 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 <td className="p-4 font-black text-[#004457] dark:text-white">
                   {isAr ? 'نيو مكسيكو (New Mexico - NM)' : 'New Mexico (NM)'}
                 </td>
-                <td className="p-4 text-emerald-600 font-bold">0% (للأعمال الخارجية)</td>
+                <td className="p-4 text-slate-700 dark:text-slate-300">{isAr ? 'تختلف الالتزامات بحسب النشاط والكيان' : 'Obligations depend on activity and entity'}</td>
                 <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{isAr ? 'تختلف البيانات العامة حسب المتطلبات' : 'Public disclosures vary by requirement'}</td>
-                <td className="p-4 font-mono text-emerald-600 font-bold">$0 (لا يوجد تقرير سنوي)</td>
+                <td className="p-4">{isAr ? 'يُراجع حسب نوع الكيان' : 'Depends on entity type'}</td>
                 <td className="p-4 text-slate-600 dark:text-slate-400">أقل تكلفة صيانة سنوية وميزانية اقتصادية</td>
                 <td className="p-4 text-center">
                   <button
@@ -563,7 +555,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
         <div className="rounded-3xl bg-white dark:bg-[#071D2B] border-2 border-[#004457]/20 dark:border-cyan-950 p-6 shadow-md space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs font-black text-[#00A896]">
+              <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2]">
                 {isAr
                   ? 'أسعار خدمات التأسيس ورسوم الولايات بشكل منفصل'
                   : 'US formation service prices and state filing fees shown separately'}
@@ -649,7 +641,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-black text-[#003445] dark:text-white">
                             {isAr ? st.nameAr : st.nameEn}{' '}
-                            <span className="text-xs font-mono text-[#00A896]">({st.code})</span>
+                            <span className="text-xs font-mono text-[#007468] dark:text-[#72dfd2]">({st.code})</span>
                           </span>
                           {st.badgeAr && (
                             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
@@ -688,7 +680,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
       {/* 6. FAQ ACCORDION SECTION */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-center space-y-2">
-          <span className="text-xs font-black text-[#00A896] uppercase tracking-wider">
+          <span className="text-xs font-black text-[#007468] dark:text-[#72dfd2] uppercase tracking-wider">
             {isAr ? 'الأسئلة الشائعة' : 'Frequently Asked Questions'}
           </span>
           <h2 className="text-2xl font-black text-[#003445] dark:text-white">
@@ -709,11 +701,11 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   className="w-full p-5 text-right flex items-center justify-between gap-4 cursor-pointer font-bold text-sm text-[#003445] dark:text-white hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <HelpCircle className="w-4 h-4 text-[#00A896] shrink-0" />
+                    <HelpCircle className="w-4 h-4 text-[#007468] dark:text-[#72dfd2] shrink-0" />
                     <span>{isAr ? faq.qAr : faq.qEn}</span>
                   </div>
                   {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-[#00A896] shrink-0" />
+                    <ChevronUp className="w-4 h-4 text-[#007468] dark:text-[#72dfd2] shrink-0" />
                   ) : (
                     <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
                   )}
@@ -765,7 +757,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
               href={`https://wa.me/${siteContent.whatsappNumber.replace(/[^0-9]/g, '')}`}
               target="_blank"
               rel="noreferrer"
-              className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 text-center"
+              className="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-all cursor-pointer flex items-center justify-center gap-2 text-center"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>{isAr ? 'استشارة فورية عبر واتساب' : 'WhatsApp Consultation'}</span>
