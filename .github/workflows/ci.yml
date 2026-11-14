@@ -37,6 +37,39 @@ jobs:
     - name: Test public preview isolation and asset hashes
       run: node --test tests/preview-worker.test.mjs
 
+    - name: Upload preview build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: qabs-preview-dist
+        path: dist/
+        if-no-files-found: error
+        retention-days: 2
+
+
+    - name: Check Cloudflare preview deployment credentials
+      id: cloudflare-creds
+      if: github.event_name == 'push' && github.ref == 'refs/heads/staging/qabs-phase2-security-20261113'
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      run: |
+        if [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ]; then
+          echo "available=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "available=false" >> "$GITHUB_OUTPUT"
+          echo "Cloudflare deployment credentials are not configured; preview deployment skipped."
+        fi
+
+    - name: Deploy isolated QABS public preview
+      if: github.event_name == 'push' && github.ref == 'refs/heads/staging/qabs-phase2-security-20261113' && steps.cloudflare-creds.outputs.available == 'true'
+      env:
+        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        QABS_COMMIT_SHA: ${{ github.sha }}
+      run: |
+        node scripts/build-preview-worker.mjs dist preview-output
+        npx --yes wrangler@4 deploy --config wrangler.toml
+
     - name: Security & Secret Scan
       run: |
         echo "Running limited pattern scan..."

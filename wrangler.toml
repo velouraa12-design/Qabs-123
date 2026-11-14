@@ -1,0 +1,9 @@
+name = "qabs-123-preview-c31cc600"
+main = "preview-output/worker.mjs"
+compatibility_date = "2026-11-13"
+workers_dev = false
+
+[[services]]
+binding = "API"
+service = "qabs-isolated-staging-worker-staging"
+environment = "production"

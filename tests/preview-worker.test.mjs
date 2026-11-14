@@ -7,20 +7,28 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
 
-test('preview serves only built assets and never exposes API or writes',async()=>{
+test('preview serves built assets and proxies only to isolated staging API',async()=>{
   const out=mkdtempSync(path.join(tmpdir(),'qabs-preview-test-'));
   try {
     const sha='0123456789abcdef0123456789abcdef01234567';
     execFileSync(process.execPath,['scripts/build-preview-worker.mjs','dist',out],{env:{...process.env,QABS_COMMIT_SHA:sha}});
     const manifest=JSON.parse(readFileSync(path.join(out,'manifest.json'),'utf8'));
     const worker=(await import(pathToFileURL(path.join(out,'worker.mjs')).href)).default;
+    const env={API:{async fetch(request){
+      const pathname=new URL(request.url).pathname;
+      if(pathname==='/health'||pathname==='/diagnostic') return Response.json({status:'ok',environment:'staging'});
+      if(pathname==='/api/auth/me') return Response.json({user:null});
+      return Response.json({error:'AUTH_REQUIRED'},{status:401});
+    }}};
     for(const [url,expected] of Object.entries(manifest.assets)){
-      const res=await worker.fetch(new Request('https://preview.example'+url));
+      const res=await worker.fetch(new Request('https://preview.example'+url),env);
       assert.equal(res.status,200);assert.equal(res.headers.get('x-qabs-source-commit'),sha);
       assert.equal(createHash('sha256').update(Buffer.from(await res.arrayBuffer())).digest('hex'),expected.sha256);
     }
-    assert.equal((await worker.fetch(new Request('https://preview.example/api/platform/me'))).status,404);
-    assert.equal((await worker.fetch(new Request('https://preview.example/private-document.pdf'))).status,404);
-    assert.equal((await worker.fetch(new Request('https://preview.example/',{method:'POST'}))).status,405);
+    assert.equal((await worker.fetch(new Request('https://preview.example/api/auth/me'),env)).status,200);
+    assert.equal((await worker.fetch(new Request('https://preview.example/api/platform/me'),env)).status,401);
+    assert.equal((await worker.fetch(new Request('https://preview.example/health'),env)).status,200);
+    assert.equal((await worker.fetch(new Request('https://preview.example/private-document.pdf'),env)).status,404);
+    assert.equal((await worker.fetch(new Request('https://preview.example/',{method:'POST'}),env)).status,405);
   } finally {rmSync(out,{recursive:true,force:true})}
 });
