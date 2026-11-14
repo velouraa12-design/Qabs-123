@@ -2,9 +2,9 @@ name: QABS Platform CI & Quality Check
 
 on:
   push:
-    branches: [ main, master, fix/qabs-authorized-remediation-20261113, "staging/**" ]
+    branches: [ main, master, fix/qabs-authorized-remediation-20261113, "staging/**", "feature/**" ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, "staging/**" ]
 
 jobs:
   validate:
