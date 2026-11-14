@@ -37,7 +37,7 @@ test('isolated workerd D1/R2: auth, roles, tenant boundaries, requests, files an
   const b=await signup('b@example.test'),B=b.cookie;const am=await me(A),bm=await me(B);assert.notEqual(am.tenant.id,bm.tenant.id);
   await t.test('request replay, payload conflict and tenant isolation',async()=>{
     const p={kind:'formation',attempt_id:'synthetic-request-1',payload:{test:'A'}};
-    const one=await call('/api/platform/requests',{method:'POST',cookie:A,body:p});assert.equal(one.status,201);
+    const one=await call('/api/platform/requests',{method:'POST',cookie:A,body:p});assert.equal(one.status,201);assert.equal(one.data.request.status,'submitted');
     const two=await call('/api/platform/requests',{method:'POST',cookie:A,body:p});assert.equal(two.status,200);assert.equal(two.data.request.id,one.data.request.id);
     assert.equal((await call('/api/platform/requests',{method:'POST',cookie:A,body:{...p,payload:{test:'changed'}}})).status,409);
     const path='/api/platform/requests/'+one.data.request.id;
