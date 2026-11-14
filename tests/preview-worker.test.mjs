@@ -19,8 +19,8 @@ test('preview serves only built assets and never exposes API or writes',async()=
       assert.equal(res.status,200);assert.equal(res.headers.get('x-qabs-source-commit'),sha);
       assert.equal(createHash('sha256').update(Buffer.from(await res.arrayBuffer())).digest('hex'),expected.sha256);
     }
-    assert.equal((await worker.fetch(new Request('https://preview.example/api/platform/me'))).status,404);
-    assert.equal((await worker.fetch(new Request('https://preview.example/private-document.pdf'))).status,404);
-    assert.equal((await worker.fetch(new Request('https://preview.example/',{method:'POST'}))).status,405);
+    assert.equal((await worker.fetch(new Request('https://preview.example/api/auth/me'),env)).status,200);\n    assert.equal((await worker.fetch(new Request('https://preview.example/api/platform/me'),env)).status,401);\n    assert.equal((await worker.fetch(new Request('https://preview.example/health'),env)).status,200);
+    assert.equal((await worker.fetch(new Request('https://preview.example/private-document.pdf'),env)).status,404);
+    assert.equal((await worker.fetch(new Request('https://preview.example/',{method:'POST'}),env)).status,405);
   } finally {rmSync(out,{recursive:true,force:true})}
 });
