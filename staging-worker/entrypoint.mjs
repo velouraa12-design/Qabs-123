@@ -3,7 +3,8 @@ import {
   logIn,
   logOut,
   signUp,
-  sessionCookie
+  sessionCookie,
+  consumeAuthRateLimit
 } from './auth.mjs';
 import { platformRoute } from './platform.mjs';
 import { commerceRoute } from './commerce.mjs';
@@ -41,7 +42,7 @@ function escapeHtml(value) {
 
 function isSameOrigin(request) {
   const origin = request.headers.get('origin');
-  return !origin || origin === new URL(request.url).origin;
+  return Boolean(origin) && origin === new URL(request.url).origin;
 }
 
 async function readJson(request) {
@@ -78,10 +79,10 @@ const worker = {
     if (request.method === 'GET' && url.pathname === '/login') return html(loginPage());
     if (request.method === 'GET' && url.pathname === '/workspace') { const user = await currentUser(env.DB, request); return user ? html(workspacePage(user)) : redirect('/login?portal=workspace'); }
     if (url.pathname.startsWith('/api/auth/')) {
-      if (!isSameOrigin(request)) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
+      if (request.method === 'POST' && !isSameOrigin(request)) return json({ error: 'ORIGIN_NOT_ALLOWED' }, 403);
       try {
-        if (request.method === 'POST' && url.pathname === '/api/auth/login') { const body = await readJson(request); const result = await logIn(env.DB, body.email, body.password); return json(result.body, result.status, result.cookie ? { 'set-cookie': result.cookie } : {}); }
-        if (request.method === 'POST' && url.pathname === '/api/auth/signup') { const body = await readJson(request); const result = await signUp(env.DB, body.email, body.password); return json(result.body, result.status, result.cookie ? { 'set-cookie': result.cookie } : {}); }
+        if (request.method === 'POST' && url.pathname === '/api/auth/login') { const body = await readJson(request); const limit = await consumeAuthRateLimit(env.DB, request, 'login', body.email); if (!limit.allowed) return json({ error: 'RATE_LIMITED' }, 429, { 'retry-after': String(limit.retryAfter) }); const result = await logIn(env.DB, body.email, body.password); return json(result.body, result.status, result.cookie ? { 'set-cookie': result.cookie } : {}); }
+        if (request.method === 'POST' && url.pathname === '/api/auth/signup') { const body = await readJson(request); const limit = await consumeAuthRateLimit(env.DB, request, 'signup', body.email); if (!limit.allowed) return json({ error: 'RATE_LIMITED' }, 429, { 'retry-after': String(limit.retryAfter) }); const result = await signUp(env.DB, body.email, body.password); return json(result.body, result.status, result.cookie ? { 'set-cookie': result.cookie } : {}); }
         if (request.method === 'POST' && url.pathname === '/api/auth/logout') { const result = await logOut(env.DB, request); return json(result.body, result.status, { 'set-cookie': result.cookie }); }
         if (request.method === 'GET' && url.pathname === '/api/auth/me') return json({ user: await currentUser(env.DB, request) });
       } catch {
