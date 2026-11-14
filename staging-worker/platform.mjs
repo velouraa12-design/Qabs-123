@@ -96,7 +96,7 @@ export async function platformRoute(request, env, url) {
       const requestId = id('req');
       const timestamp = now();
       const results = await env.DB.batch([
-        env.DB.prepare("INSERT INTO staging_requests (id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, 'draft', ?5, ?6, ?7, ?7) ON CONFLICT(tenant_id, attempt_id) DO NOTHING").bind(requestId, membership.tenant_id, user.id, kind, payloadJson, attemptId, timestamp),
+        env.DB.prepare("INSERT INTO staging_requests (id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, 'submitted', ?5, ?6, ?7, ?7) ON CONFLICT(tenant_id, attempt_id) DO NOTHING").bind(requestId, membership.tenant_id, user.id, kind, payloadJson, attemptId, timestamp),
         env.DB.prepare("INSERT INTO staging_audit_events (id, tenant_id, actor_id, action, resource_type, resource_id, metadata_json, created_at) SELECT ?1, tenant_id, created_by, 'request.created', 'request', id, ?2, created_at FROM staging_requests WHERE id = ?3 AND tenant_id = ?4").bind(id('aud'), JSON.stringify({kind}), requestId, membership.tenant_id),
         env.DB.prepare("SELECT id, tenant_id, created_by, kind, status, payload_json, attempt_id, created_at, updated_at FROM staging_requests WHERE tenant_id = ?1 AND attempt_id = ?2").bind(membership.tenant_id, attemptId)
       ]);
