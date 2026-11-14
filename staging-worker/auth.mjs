@@ -18,6 +18,11 @@ CREATE TABLE IF NOT EXISTS staging_sessions (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_staging_sessions_expiry ON staging_sessions(expires_at);
+CREATE TABLE IF NOT EXISTS staging_auth_rate_limits (
+  rate_key TEXT PRIMARY KEY,
+  window_started_at INTEGER NOT NULL,
+  attempts INTEGER NOT NULL
+);
 `;
 
 function bytesToBase64Url(bytes) {
@@ -149,4 +154,44 @@ export async function logOut(db, request) {
     await db.prepare('DELETE FROM staging_sessions WHERE token_hash = ?1').bind(await sha256(token)).run();
   }
   return { status: 200, body: { ok: true }, cookie: sessionCookie('', 0) };
+}
+
+
+/**
+ * Atomically consumes one authentication attempt in both an email and an IP
+ * bucket. Only SHA-256 digests are stored; raw email addresses and IPs are not
+ * persisted in the rate-limit table.
+ */
+export async function consumeAuthRateLimit(db, request, action, email) {
+  await ensureSchema(db);
+  const now = Math.floor(Date.now() / 1000);
+  const windowSeconds = 15 * 60;
+  const maxAttempts = 5;
+  const normalizedEmail = normalizeEmail(email);
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const keys = [
+    await sha256(`email:${action}:${normalizedEmail}`),
+    await sha256(`ip:${action}:${ip}`)
+  ];
+  let retryAfter = 0;
+  for (const rateKey of keys) {
+    const row = await db.prepare(`
+      INSERT INTO staging_auth_rate_limits (rate_key, window_started_at, attempts)
+      VALUES (?1, ?2, 1)
+      ON CONFLICT(rate_key) DO UPDATE SET
+        attempts = CASE
+          WHEN staging_auth_rate_limits.window_started_at <= ?3 THEN 1
+          ELSE staging_auth_rate_limits.attempts + 1
+        END,
+        window_started_at = CASE
+          WHEN staging_auth_rate_limits.window_started_at <= ?3 THEN ?2
+          ELSE staging_auth_rate_limits.window_started_at
+        END
+      RETURNING attempts, window_started_at
+    `).bind(rateKey, now, now - windowSeconds).first();
+    if (row && row.attempts > maxAttempts) {
+      retryAfter = Math.max(retryAfter, windowSeconds - (now - row.window_started_at));
+    }
+  }
+  return { allowed: retryAfter === 0, retryAfter };
 }
