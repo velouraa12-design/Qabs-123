@@ -37,6 +37,14 @@ jobs:
     - name: Test public preview isolation and asset hashes
       run: node --test tests/preview-worker.test.mjs
 
+    - name: Upload preview build artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: qabs-preview-dist
+        path: dist/
+        if-no-files-found: error
+        retention-days: 2
+
     - name: Security & Secret Scan
       run: |
         echo "Running limited pattern scan..."
